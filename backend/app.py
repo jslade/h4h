@@ -9,5 +9,9 @@ DB = SQLAlchemy(APP)
 def hello_world():
     return 'Hello, World!'
 
+@APP.route('/api/test')
+def test_json():
+    return {"test": "TEST "}
+
 if __name__ == '__main__':
     APP.run(host='0.0.0.0', port=5000)

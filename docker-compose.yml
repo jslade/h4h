@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -13,7 +11,7 @@ services:
     build:
       context: backend/
     ports:
-      - '3001:3001'
+      - '3001:5000'
     depends_on:
       - db
     volumes:
