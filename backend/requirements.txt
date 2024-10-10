@@ -5,5 +5,7 @@ flask-alembic
 ipython
 psycopg2==2.9.9
 pyasic>=0.54.16
+pydantic
 pytest
 sqlalchemy==2.0.28
+structlog
