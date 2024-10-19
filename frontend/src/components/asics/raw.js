@@ -12,11 +12,15 @@ export default function Raw() {
   let params = useParams();
   const {isPending, error, data} = useQuery({
     queryKey: ['asic/raw', params.name],
-    queryFn: () => api.GET({ path:`/asic/${params.name}/raw/extended`}).then((d) => d),
+    queryFn: () => api.GET({ path:`/asic/${params.name}/raw`}).then((d) => d),
   })
   const {isPendingExtended, errorExtended, dataExtended} = useQuery({
     queryKey: ['asic/raw/extended', params.name],
-    queryFn: () => api.GET({ path:`/asic/${params.name}/raw`}).then((d) => d),
+    queryFn: () => api.GET({ path:`/asic/${params.name}/raw/extended`}).then((d) => d),
+  })
+  const {isPendingErrors, errorErrors, dataErrors} = useQuery({
+    queryKey: ['asic/raw/errors', params.name],
+    queryFn: () => api.GET({ path:`/asic/${params.name}/raw/errors`}).then((d) => d),
   })
 
   function render_json(d) {
@@ -27,7 +31,10 @@ export default function Raw() {
     <div>
       <h1>ASIC: {`${params.name}`} (raw data)</h1>
       {isPending ? `Loading ${params.name}...` : (error?.message || render_json(data))}
+      <h3>ASIC: {`${params.name}`} (extended data)</h3>
       {isPendingExtended ? `Loading ${params.name}...` : (errorExtended?.message || render_json(dataExtended))}
+      <h3>ASIC: {`${params.name}`} (errors)</h3>
+      {isPendingErrors ? `Loading ${params.name}...` : (errorErrors?.message || render_json(dataErrors))}
     </div>
   )
 }

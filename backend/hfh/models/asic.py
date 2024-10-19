@@ -39,7 +39,6 @@ class Asic(DB.Model, PKId, UniquelyNamed):
             id=self.id,
             name=self.name,
             address=self.address,
-            password=self.password,
         )
         try:
             if self._miner:
@@ -48,10 +47,12 @@ class Asic(DB.Model, PKId, UniquelyNamed):
             setattr(self, "_miner", None)
 
         self._miner = await pyasic.get_miner(self.address)
+        if self.password:
+            self._miner.pwd = self.password
         return self._miner
 
     @classmethod
     def all_active(cls, db_session: Optional[DbSession] = None) -> list[Self]:
         db_session = db_session or DB.session
-        stmt = select(cls).order_by(cls.name)
+        stmt = select(cls).order_by(cls.name).filter_by(is_active=True)
         return db_session.scalars(stmt)

@@ -4,7 +4,9 @@ flask-sqlalchemy==3.1.1
 flask-alembic
 ipython
 psycopg2==2.9.9
-pyasic>=0.54.16
+#pyasic>=0.54.16
+# Newer versions of pyasic don't seem to work correctly for privileged commands
+pyasic==0.39.3
 pydantic
 pytest
 pytz
