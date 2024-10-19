@@ -12,17 +12,22 @@ export default function Raw() {
   let params = useParams();
   const {isPending, error, data} = useQuery({
     queryKey: ['asic/raw', params.name],
-    queryFn: () => api.GET({ path:`/asic/raw/${params.name}`}).then((data) => data),
+    queryFn: () => api.GET({ path:`/asic/${params.name}/raw/extended`}).then((d) => d),
+  })
+  const {isPendingExtended, errorExtended, dataExtended} = useQuery({
+    queryKey: ['asic/raw/extended', params.name],
+    queryFn: () => api.GET({ path:`/asic/${params.name}/raw`}).then((d) => d),
   })
 
-  function render_json(data) {
-    return <ReactJson src={data} />
+  function render_json(d) {
+    return <ReactJson src={d} />
   }
   
   return (
     <div>
       <h1>ASIC: {`${params.name}`} (raw data)</h1>
       {isPending ? `Loading ${params.name}...` : (error?.message || render_json(data))}
+      {isPendingExtended ? `Loading ${params.name}...` : (errorExtended?.message || render_json(dataExtended))}
     </div>
   )
 }
