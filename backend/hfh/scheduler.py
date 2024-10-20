@@ -17,3 +17,11 @@ def periodically_sample() -> None:
 
     with APP.app_context():
         asyncio.run(SamplingService().sample_all_active(interval=60))
+
+
+@SCHEDULER.task("interval", id="periodically_update_schedule", seconds=600)
+def periodically_update_schedule() -> None:
+    from .services.schedule_service import ScheduleService
+
+    with APP.app_context():
+        asyncio.run(ScheduleService().update_all_active())

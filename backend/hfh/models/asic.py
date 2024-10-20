@@ -14,7 +14,6 @@ LOGGER = structlog.get_logger(__name__)
 
 if TYPE_CHECKING:
     from .asic_profile import AsicProfile
-    from .asic_state import AsicState
     from .performance_sample import PerformanceSample
 
 
@@ -48,7 +47,9 @@ class Asic(DB.Model, PKId, UniquelyNamed):
     changed_at: Mapped[datetime] = mapped_column(DB.DateTime, nullable=True)
 
     samples: Mapped[list["PerformanceSample"]] = relationship(
-        "PerformanceSample", back_populates="asic"
+        "PerformanceSample",
+        back_populates="asic",
+        order_by="PerformanceSample.timestamp",
     )
 
     async def get_miner(self: Self) -> pyasic.AnyMiner:
