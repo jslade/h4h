@@ -1,8 +1,10 @@
+from datetime import UTC, datetime
 import structlog
 from pyasic import AnyMiner
 from pyasic.data import MinerData
 from pyasic.data.error_codes import MinerErrorData
 
+from ..db import DB
 from ..models.asic import Asic, AsicStatus
 from ..utils.data import getitem
 
@@ -88,6 +90,8 @@ async def update_status(asic: Asic) -> AsicStatus:
     except Exception as ex:
         LOGGER.info("asic appears to be offline", asic=asic.name, ex=ex)
 
+    asic.updated_at = datetime.now(tz=UTC)
+
     status = AsicStatus.for_asic(asic)
     LOGGER.info("updated status", asic=asic.name, status=status)
     return status
@@ -98,4 +102,5 @@ async def update_status_of_all_active() -> None:
     LOGGER.info("Updating status of all active", count=len(all_active))
     for asic in all_active:
         await update_status(asic)
+    DB.session.commit()
     LOGGER.info("Updated status of all active", count=len(all_active))

@@ -1,4 +1,5 @@
 flask==3.0.2
+Flask-APScheduler
 flask-migrate
 flask-sqlalchemy==3.1.1
 flask-alembic
