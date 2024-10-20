@@ -46,20 +46,22 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
 
     @cached_property
     def daytime_start(self) -> time:
-        dt = datetime.strptime(self.daytime_start_hhmm, "%H:%M")
-        return dt.time()
+        hr, mn = self.daytime_start_hhmm.split(":", 2)
+        return time(int(hr), int(mn))
 
     @cached_property
     def daytime_end(self) -> time:
         if self.daytime_end_hhmm == "00:00":
             return time(23, 59, 59, 999999)
-        dt = datetime.strptime(self.daytime_end_hhmm, "%H:%M")
-        return dt.time()
+        else:
+            hr, mn = self.daytime_end_hhmm.split(":", 2)
+            return time(int(hr), int(mn))
 
     @cached_property
     def date_start(self) -> date:
         year = date.today().year
         dt = datetime.strptime(f"{year}/{self.date_start_mmdd}", "%Y/%m/%d")
+        dt = dt.astimezone(self.schedule.timezone) if self.schedule else dt
         return dt.date()
 
     @cached_property
@@ -73,7 +75,22 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
 
     def is_active_at(self, moment: datetime) -> bool:
         t = moment.time()
-        if t < self.daytime_start or t > self.daytime_end:
+        d = moment.date()
+        # LOGGER.debug(
+        #    "Interval.is_active_at",
+        #    start=self.daytime_start,
+        #    end=self.daytime_end,
+        #    time=t,
+        #    date=d,
+        #    moment=moment,
+        # )
+
+        if t < self.daytime_start or t >= self.daytime_end:
+            # LOGGER.debug("Interval.is_active_at -- out of time window")
+            return False
+
+        if d < self.date_start or d > self.date_end:
+            # LOGGER.debug("Interval.is_active_at -- out of date window")
             return False
 
         return True

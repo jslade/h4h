@@ -14,27 +14,55 @@ LOGGER = structlog.get_logger(__name__)
 
 class ScheduleService:
     async def update_all_active(self) -> None:
+        LOGGER.info("updating all active asics according to schedule")
         for asic in Asic.all_active():
             await self.update(asic)
             DB.session.commit()
 
     async def update(self, asic: Asic) -> None:
         if not asic.is_online:
-            LOGGER.info("Ignoring offline", asic=asic.name)
+            LOGGER.debug("Ignoring offline", asic=asic.name)
+            return
 
-        LOGGER.info(
-            "Updating asic operation", asic=asic.name, status=AsicStatus.for_asic(asic)
+        LOGGER.debug(
+            "Updating asic operation by schedule constraints",
+            asic=asic.name,
+            status=AsicStatus.for_asic(asic),
         )
 
-        moment = datetime.now(tz=UTC)
+        moment = datetime.now(tz=asic.timezone)
         current_interval = self.get_current_interval(asic, moment)
+        if current_interval:
+            LOGGER.debug(
+                "current_interval",
+                asic=asic.name,
+                moment=moment,
+                profile=asic.profile.name or asic.profile.id if asic.profile else None,
+                schedule=current_interval.schedule.name or current_interval.schedule.id,
+                interval=current_interval.name or current_interval.id,
+                hashing=current_interval.hashing_enabled,
+                time_start=current_interval.daytime_start,
+                time_end=current_interval.daytime_end,
+                power_limit=current_interval.performance_limit.power_limit
+                if current_interval.performance_limit
+                else None,
+            )
+        else:
+            LOGGER.debug(
+                "no current_interval",
+                asic=asic.name,
+                profile=asic.profile.name or asic.profile.id if asic.profile else None,
+                schedule=asic.profile.schedule.name or asic.profile.schedule.id
+                if asic.profile and asic.profile.schedule
+                else None,
+            )
 
         if self.should_be_hashing(asic, current_interval, moment):
-            LOGGER.info("Asic should be hashing", asic=asic.name)
+            LOGGER.debug("should be hashing", asic=asic.name)
             await self.ensure_is_hashing(asic)
             await self.ensure_power_limit(asic, current_interval)
         else:
-            LOGGER.info("Asic should not be hashing", asic=asic.name)
+            LOGGER.debug("should not be hashing", asic=asic.name)
             await self.ensure_not_hashing(asic)
 
     def get_current_interval(
@@ -48,6 +76,15 @@ class ScheduleService:
 
         interval: HashingInterval
         for interval in schedule.intervals:
+            LOGGER.debug(
+                "testing active interval",
+                asic=asic.name,
+                moment=moment,
+                schedule=schedule.name or schedule.id if schedule else None,
+                profile=asic.profile.name or asic.profile.id if asic.profile else None,
+                start_time=interval.daytime_start,
+                end_time=interval.daytime_end,
+            )
             if interval.is_active_at(moment):
                 return interval
 
@@ -63,6 +100,7 @@ class ScheduleService:
 
     async def ensure_is_hashing(self, asic: Asic) -> None:
         if not asic.is_hashing:
+            LOGGER.info("Asic should be hashing but isn't", asic=asic.name)
             await set_hashing(asic, True)
 
     async def ensure_power_limit(
@@ -80,8 +118,15 @@ class ScheduleService:
             current_power_limit = data.wattage_limit
 
         if current_power_limit != expected_power_limit:
+            LOGGER.info(
+                "Asic power_limit is not as expected",
+                asic=asic.name,
+                current=current_power_limit,
+                expected=expected_power_limit,
+            )
             await set_power_limit(asic, expected_power_limit)
 
     async def ensure_not_hashing(self, asic: Asic) -> None:
         if asic.is_hashing:
+            LOGGER.info("Asic should not be hashing but is", asic=asic.name)
             await set_hashing(asic, False)

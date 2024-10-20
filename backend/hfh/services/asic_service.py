@@ -75,7 +75,7 @@ async def set_power_limit(asic: Asic, power_limit: int) -> None:
 
 async def update_status(asic: Asic) -> AsicStatus:
     prev_status = AsicStatus.for_asic(asic)
-    LOGGER.info("updating status", asic=asic.name, status=prev_status)
+    LOGGER.debug("updating status", asic=asic.name, status=prev_status)
 
     asic.is_online = False
     asic.is_hashing = False
@@ -96,12 +96,14 @@ async def update_status(asic: Asic) -> AsicStatus:
     except Exception as ex:
         LOGGER.info("asic appears to be offline", asic=asic.name, ex=ex)
 
-    asic.updated_at = datetime.now(tz=UTC)
+    asic.updated_at = datetime.now(tz=asic.timezone)
 
     status = AsicStatus.for_asic(asic)
-    LOGGER.info("updated status", asic=asic.name, status=status)
 
     if status != prev_status:
+        LOGGER.info(
+            "updated status", asic=asic.name, status=status, prev_status=prev_status
+        )
         asic.changed_at = asic.updated_at
 
     return status
@@ -113,4 +115,3 @@ async def update_status_of_all_active() -> None:
     for asic in all_active:
         await update_status(asic)
     DB.session.commit()
-    LOGGER.info("Updated status of all active", count=len(all_active))

@@ -19,7 +19,7 @@ def periodically_sample() -> None:
         asyncio.run(SamplingService().sample_all_active(interval=60))
 
 
-@SCHEDULER.task("interval", id="periodically_update_schedule", seconds=600)
+@SCHEDULER.task("interval", id="periodically_update_schedule", seconds=60)
 def periodically_update_schedule() -> None:
     from .services.schedule_service import ScheduleService
 

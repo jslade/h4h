@@ -13,6 +13,7 @@ LOGGER = structlog.get_logger(__name__)
 
 class SamplingService:
     async def sample_all_active(self, interval: int) -> None:
+        LOGGER.info("sampling all active asics")
         for asic in Asic.all_active():
             await self.add_sample(asic, interval)
 
@@ -24,7 +25,7 @@ class SamplingService:
 
         sample = PerformanceSample(
             asic=asic,
-            timestamp=datetime.now(tz=UTC),
+            timestamp=datetime.now(tz=asic.timezone),
             interval_secs=interval,
             is_online=asic.is_online,
             is_hashing=asic.is_hashing,

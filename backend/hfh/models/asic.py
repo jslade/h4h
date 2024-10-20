@@ -1,5 +1,6 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 from enum import Enum
+from functools import cached_property
 from typing import TYPE_CHECKING, Optional, Self
 
 import pyasic
@@ -52,8 +53,14 @@ class Asic(DB.Model, PKId, UniquelyNamed):
         order_by="PerformanceSample.timestamp",
     )
 
+    @cached_property
+    def timezone(self) -> timezone:
+        if self.profile and self.profile.schedule:
+            return self.profile.schedule.timezone
+        return UTC  # TODO: should have a global config?
+
     async def get_miner(self: Self) -> pyasic.AnyMiner:
-        LOGGER.info(
+        LOGGER.debug(
             "get_miner",
             id=self.id,
             name=self.name,
