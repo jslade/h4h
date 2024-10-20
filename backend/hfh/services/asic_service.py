@@ -62,15 +62,21 @@ async def set_hashing(asic: Asic, hashing: bool) -> None:
     else:
         await miner.stop_mining()
 
+    await update_status(asic)
+
 
 async def set_power_limit(asic: Asic, power_limit: int) -> None:
     LOGGER.info("set_power_limit", asic=asic.name, power_limit=power_limit)
     miner: AnyMiner = await asic.get_miner()
     await miner.api.adjust_power_limit(power_limit)
 
+    await update_status(asic)
+
 
 async def update_status(asic: Asic) -> AsicStatus:
-    LOGGER.info("updating status", asic=asic.name)
+    prev_status = AsicStatus.for_asic(asic)
+    LOGGER.info("updating status", asic=asic.name, status=prev_status)
+
     asic.is_online = False
     asic.is_hashing = False
     asic.is_stable = False
@@ -94,6 +100,10 @@ async def update_status(asic: Asic) -> AsicStatus:
 
     status = AsicStatus.for_asic(asic)
     LOGGER.info("updated status", asic=asic.name, status=status)
+
+    if status != prev_status:
+        asic.changed_at = asic.updated_at
+
     return status
 
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import Button from '@mui/material/Button'
+import SummaryCard from './summary_card'
 
 import API from '../../api';
 
@@ -16,7 +16,7 @@ export default function Summary() {
     
     function renderSummary(summary_data) {
         return (<ul>
-            {summary_data.asics.map((asic) => <li>{asic.name}: {asic.status} ({asic.updated_at})</li>)}
+            {summary_data.asics.map((asic) => <><SummaryCard asic_summary={asic} /><br/></>)}
         </ul>);
     }
 

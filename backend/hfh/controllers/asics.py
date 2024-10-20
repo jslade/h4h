@@ -55,7 +55,7 @@ def set_asic_hashing(name: str, state: str) -> dict:
     hashing = state.lower() in ["true", "1", "yes"]
     asyncio.run(set_hashing(asic, hashing))
 
-    return dict(success=True, hashing=hashing)
+    return AsicSummaryDto.from_asic(asic).model_dump()
 
 
 @APP.route("/api/asic/<name>/set-power-limit/<power_limit>", methods=["PUT", "PATCH"])
@@ -64,4 +64,4 @@ def set_asic_power_limit(name: str, power_limit: int) -> dict:
 
     asyncio.run(set_power_limit(asic, power_limit))
 
-    return dict(success=True, power_limit=power_limit)
+    return AsicSummaryDto.from_asic(asic).model_dump()

@@ -45,6 +45,7 @@ class Asic(DB.Model, PKId, UniquelyNamed):
     updated_at: Mapped[datetime] = mapped_column(
         DB.DateTime, nullable=True, onupdate=datetime.now(tz=UTC)
     )
+    changed_at: Mapped[datetime] = mapped_column(DB.DateTime, nullable=True)
 
     samples: Mapped[list["PerformanceSample"]] = relationship(
         "PerformanceSample", back_populates="asic"
