@@ -17,8 +17,8 @@ class AsicSummaryDto(BaseModel):
         return AsicSummaryDto(
             name=asic.name,
             status=AsicStatus.for_asic(asic),
-            updated_at=asic.updated_at,
-            changed_at=asic.changed_at or asic.updated_at,
+            updated_at=asic.updated_at.astimezone(asic.timezone),
+            changed_at=(asic.changed_at or asic.updated_at).astimezone(asic.timezone),
         )
 
 
