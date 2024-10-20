@@ -11,9 +11,9 @@ SCHEDULER = APScheduler()
 SCHEDULER.init_app(APP)
 
 
-@SCHEDULER.task("interval", id="periodically_update_asic_status", seconds=60)
-def periodically_update_asic_status() -> None:
-    from .services.asic_service import update_status_of_all_active
+@SCHEDULER.task("interval", id="periodically_sample", seconds=60)
+def periodically_sample() -> None:
+    from .services.sampling_service import SamplingService
 
     with APP.app_context():
-        asyncio.run(update_status_of_all_active())
+        asyncio.run(SamplingService().sample_all_active(interval=60))
