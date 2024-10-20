@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+from enum import Enum
 from typing import TYPE_CHECKING, Optional, Self
 
 import pyasic
@@ -12,6 +14,7 @@ LOGGER = structlog.get_logger(__name__)
 
 if TYPE_CHECKING:
     from .asic_profile import AsicProfile
+    from .asic_state import AsicState
     from .performance_sample import PerformanceSample
 
 
@@ -24,10 +27,24 @@ class Asic(DB.Model, PKId, UniquelyNamed):
     is_active: Mapped[bool] = mapped_column(
         DB.Boolean, nullable=False, server_default="true", index=True
     )
+    is_online: Mapped[bool] = mapped_column(
+        DB.Boolean, nullable=False, server_default="false", index=True
+    )
+    is_hashing: Mapped[bool] = mapped_column(
+        DB.Boolean, nullable=False, server_default="false", index=True
+    )
+    is_stable: Mapped[bool] = mapped_column(
+        DB.Boolean, nullable=False, server_default="false", index=True
+    )
+
     profile_id: Mapped[int] = mapped_column(
         DB.Integer, DB.ForeignKey("asic_profiles.id"), nullable=True
     )
     profile: Mapped[Optional["AsicProfile"]] = relationship("AsicProfile")
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DB.DateTime, nullable=True, onupdate=datetime.now(tz=UTC)
+    )
 
     samples: Mapped[list["PerformanceSample"]] = relationship(
         "PerformanceSample", back_populates="asic"
@@ -55,4 +72,24 @@ class Asic(DB.Model, PKId, UniquelyNamed):
     def all_active(cls, db_session: Optional[DbSession] = None) -> list[Self]:
         db_session = db_session or DB.session
         stmt = select(cls).order_by(cls.name).filter_by(is_active=True)
-        return db_session.scalars(stmt)
+        return [a for a in db_session.scalars(stmt)]
+
+
+class AsicStatus(str, Enum):
+    offline = "offline"
+    hashing = "hashing"
+    transitioning = "transitioning"
+    paused = "paused"
+    error = "error"
+
+    def for_asic(asic: Asic) -> Self:
+        if asic.is_hashing:
+            if asic.is_stable:
+                return AsicStatus.hashing
+            else:
+                return AsicStatus.transitioning
+        else:
+            if asic.is_online:
+                return AsicStatus.paused
+            else:
+                return AsicStatus.offline

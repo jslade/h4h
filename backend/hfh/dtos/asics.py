@@ -1,17 +1,9 @@
+from typing import Self
 
-
-
-from typing import Optional, Self
 from pydantic import BaseModel
-from enum import Enum
 
-from hfh.models.asic import Asic
+from ..models.asic import Asic, AsicStatus
 
-class AsicStatus(str, Enum):
-    offline = "offline"
-    hashing = "hashing"
-    paused = "paused"
-    error = "error"
 
 class AsicSummaryDto(BaseModel):
     name: str
@@ -19,10 +11,8 @@ class AsicSummaryDto(BaseModel):
 
     @classmethod
     def from_asic(cls, asic: Asic) -> Self:
-        return AsicSummaryDto(
-            name=asic.name,
-            status=AsicStatus.offline.value
-        )
+        return AsicSummaryDto(name=asic.name, status=AsicStatus.for_asic(asic))
+
 
 class AsicsSummaryDto(BaseModel):
     asics: list[AsicSummaryDto]

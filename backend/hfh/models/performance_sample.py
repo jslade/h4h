@@ -22,6 +22,7 @@ class PerformanceSample(DB.Model, PKId):
     timestamp: Mapped[datetime] = mapped_column(DB.DateTime, nullable=False, index=True)
     interval_secs: Mapped[int] = mapped_column(DB.Integer, nullable=False)
 
+    is_online: Mapped[bool] = mapped_column(DB.Boolean, nullable=False)
     is_hashing: Mapped[bool] = mapped_column(DB.Boolean, nullable=False)
     is_stable: Mapped[bool] = mapped_column(DB.Boolean, nullable=False)
     power: Mapped[int] = mapped_column(DB.Integer, nullable=False)

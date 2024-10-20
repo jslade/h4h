@@ -3,7 +3,8 @@ from pyasic import AnyMiner
 from pyasic.data import MinerData
 from pyasic.data.error_codes import MinerErrorData
 
-from ..models.asic import Asic
+from ..models.asic import Asic, AsicStatus
+from ..utils.data import getitem
 
 LOGGER = structlog.get_logger(__name__)
 
@@ -64,3 +65,37 @@ async def set_power_limit(asic: Asic, power_limit: int) -> None:
     LOGGER.info("set_power_limit", asic=asic.name, power_limit=power_limit)
     miner: AnyMiner = await asic.get_miner()
     await miner.api.adjust_power_limit(power_limit)
+
+
+async def update_status(asic: Asic) -> AsicStatus:
+    LOGGER.info("updating status", asic=asic.name)
+    asic.is_online = False
+    asic.is_hashing = False
+    asic.is_stable = False
+
+    try:
+        d = await get_asic_data(asic)
+        asic.is_online = True
+        asic.is_hashing = d.is_mining
+        if asic.is_hashing:
+            miner: AnyMiner = await asic.get_miner()
+            summary_response = await miner.api.summary()
+            upfreq_complete = getitem(
+                summary_response, ("SUMMARY", [0], "Upfreq Complete")
+            )
+            asic.is_stable = upfreq_complete == 1
+
+    except Exception as ex:
+        LOGGER.info("asic appears to be offline", asic=asic.name, ex=ex)
+
+    status = AsicStatus.for_asic(asic)
+    LOGGER.info("updated status", asic=asic.name, status=status)
+    return status
+
+
+async def update_status_of_all_active() -> None:
+    all_active = Asic.all_active()
+    LOGGER.info("Updating status of all active", count=len(all_active))
+    for asic in all_active:
+        await update_status(asic)
+    LOGGER.info("Updated status of all active", count=len(all_active))
