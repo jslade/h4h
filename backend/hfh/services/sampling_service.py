@@ -33,8 +33,8 @@ class SamplingService:
             temp=data.temperature_avg,
             env_temp=data.env_temp,
             hash_rate=int(data.hashrate or 0),
-            power=int(data.wattage),
-            power_limit=int(data.wattage_limit),
+            power=int(data.wattage or 0),
+            power_limit=int(data.wattage_limit or 0),
             power_per_th=data.efficiency,
             price_per_kwh=Decimal(0),  # TBD
         )
