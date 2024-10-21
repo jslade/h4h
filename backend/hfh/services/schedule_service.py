@@ -24,13 +24,14 @@ class ScheduleService:
             LOGGER.debug("Ignoring offline", asic=asic.name)
             return
 
+        moment = datetime.now(tz=asic.timezone)
         LOGGER.debug(
             "Updating asic operation by schedule constraints",
             asic=asic.name,
             status=AsicStatus.for_asic(asic),
+            moment=moment,
         )
 
-        moment = datetime.now(tz=asic.timezone)
         current_interval = self.get_current_interval(asic, moment)
         if current_interval:
             LOGGER.debug(
@@ -76,15 +77,6 @@ class ScheduleService:
 
         interval: HashingInterval
         for interval in schedule.intervals:
-            LOGGER.debug(
-                "testing active interval",
-                asic=asic.name,
-                moment=moment,
-                schedule=schedule.name or schedule.id if schedule else None,
-                profile=asic.profile.name or asic.profile.id if asic.profile else None,
-                start_time=interval.daytime_start,
-                end_time=interval.daytime_end,
-            )
             if interval.is_active_at(moment):
                 return interval
 
