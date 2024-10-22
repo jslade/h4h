@@ -14,6 +14,7 @@ export default function SummaryCard({asic_summary}) {
         <li>hash_rate: {asic_summary.hash_rate}</li>
         <li>power: {asic_summary.power}</li>
         <li>power_limit: {asic_summary.power_limit}</li>
+        <li>power_per_th: {asic_summary.power_per_th}</li>
         <li>temp: {asic_summary.temp}</li>
         <li>env_temp: {asic_summary.env_temp}</li>
       </ul>
