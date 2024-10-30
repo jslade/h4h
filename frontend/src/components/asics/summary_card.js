@@ -1,11 +1,11 @@
 import React from 'react'
-import { Card } from '@mui/material';
+import { Link, Card } from '@mui/material';
 
 export default function SummaryCard({asic_summary}) {
 
   return (
     <Card>
-      <ul>
+      <ul class={`summary-status-${asic_summary.status}`}>
         <li>{asic_summary.name}</li>
         <li>status: {asic_summary.status}</li>
         <li>updated_at: {asic_summary.updated_at}</li>
@@ -17,6 +17,7 @@ export default function SummaryCard({asic_summary}) {
         <li>power_per_th: {asic_summary.power_per_th}</li>
         <li>temp: {asic_summary.temp}</li>
         <li>env_temp: {asic_summary.env_temp}</li>
+        <li><Link href={`/asics/raw/${asic_summary.name}`} target="_blank">see raw</Link></li>
       </ul>
     </Card>      
   )
