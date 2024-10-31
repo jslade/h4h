@@ -29,10 +29,10 @@ export default function SummaryCard({asic_summary}) {
         </Grid>
 
         <Grid xs={3} >
-          <Item align="right">status:</Item>
+          <Item align="right">Status:</Item>
         </Grid>
         <Grid xs={9} >
-          <Item align="left">{asic_summary.status}</Item>
+          <Item align="left"><span title={"Since " + to_locale_string(asic_summary.changed_at)}>{asic_summary.status}</span></Item>
         </Grid>
 
         <Grid xs={3} >
@@ -40,13 +40,6 @@ export default function SummaryCard({asic_summary}) {
         </Grid>
         <Grid xs={9} >
           <Item align="left"><span title={"Sampled at " + to_locale_string(asic_summary.sampled_at)}>{to_locale_string(asic_summary.updated_at)}</span></Item>
-        </Grid>
-
-        <Grid xs={3} >
-          <Item align="right">Changed at:</Item>
-        </Grid>
-        <Grid xs={9} >
-          <Item align="left">{to_locale_string(asic_summary.changed_at)}</Item>
         </Grid>
 
         <Grid xs={3} >
