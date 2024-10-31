@@ -12,6 +12,11 @@ code {
     monospace;
 }
 
+.summary-card {
+  padding: 1em;
+  margin-right: 1em;
+}
+
 .summary-status-hashing {
   background-color: lightgreen;
 }
