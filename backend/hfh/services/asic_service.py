@@ -88,10 +88,18 @@ async def update_status(asic: Asic) -> AsicStatus:
         if asic.is_hashing:
             miner: AnyMiner = await asic.get_miner()
             summary_response = await miner.api.summary()
+
             upfreq_complete = getitem(
                 summary_response, ("SUMMARY", [0], "Upfreq Complete")
             )
-            asic.is_stable = upfreq_complete == 1
+            if upfreq_complete is not None:
+                asic.is_stable = upfreq_complete == 1
+            else:
+                hashing_stable = getitem(
+                    summary_response, ("SUMMARY", [0], "Hash Stable")
+                )
+                if hashing_stable is not None:
+                    asic.is_stable = hashing_stable
 
     except Exception as ex:
         LOGGER.info("asic appears to be offline", asic=asic.name, ex=ex)

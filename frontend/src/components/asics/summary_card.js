@@ -36,7 +36,7 @@ export default function SummaryCard({asic_summary}) {
         </Grid>
 
         <Grid xs={3} >
-          <Item align="right">Updated at:</Item>
+          <Item align="right">Updated&nbsp;at:</Item>
         </Grid>
         <Grid xs={9} >
           <Item align="left"><span title={"Sampled at " + to_locale_string(asic_summary.sampled_at)}>{to_locale_string(asic_summary.updated_at)}</span></Item>
@@ -47,6 +47,13 @@ export default function SummaryCard({asic_summary}) {
         </Grid>
         <Grid xs={9} >
           <Item align="left">{asic_summary.hash_rate} TH/s</Item>
+        </Grid>
+
+        <Grid xs={3} >
+          <Item align="right">Hashcost:</Item>
+        </Grid>
+        <Grid xs={9} >
+          <Item align="left">{asic_summary.hash_cost} $/TH</Item>
         </Grid>
 
         <Grid xs={3} >
@@ -64,21 +71,14 @@ export default function SummaryCard({asic_summary}) {
         </Grid>
 
         <Grid xs={3} >
-          <Item align="right">Int temp:</Item>
+          <Item align="right">Int&nbsp;temp:</Item>
         </Grid>
         <Grid xs={9} >
           <Item align="left"><DualTempField deg_c={asic_summary.temp} /></Item>
         </Grid>
 
         <Grid xs={3} >
-          <Item align="right">Env temp:</Item>
-        </Grid>
-        <Grid xs={9} >
-          <Item align="left"><DualTempField deg_c={asic_summary.env_temp} /></Item>
-        </Grid>
-
-        <Grid xs={3} >
-          <Item align="right">Env temp:</Item>
+          <Item align="right">Env&nbsp;temp:</Item>
         </Grid>
         <Grid xs={9} >
           <Item align="left"><DualTempField deg_c={asic_summary.env_temp} /></Item>
