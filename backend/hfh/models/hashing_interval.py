@@ -93,7 +93,18 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             # LOGGER.debug("Interval.is_active_at -- out of date window")
             return False
 
+        # TODO: Weekdays active
+
         return True
 
     def is_hashing_at(self, moment: datetime) -> bool:
         return self.hashing_enabled and self.is_active_at(moment)
+
+    def next_end_time(self, moment: datetime) -> datetime:
+        if not self.is_active_at(moment):
+            return moment
+
+        d = moment.date()
+        t = self.daytime_end
+
+        return datetime.combine(date=d, time=t, tzinfo=moment.tzinfo)

@@ -15,6 +15,7 @@ LOGGER = structlog.get_logger(__name__)
 
 if TYPE_CHECKING:
     from .asic_profile import AsicProfile
+    from .hashing_interval import HashingInterval
     from .performance_sample import PerformanceSample
 
 
@@ -41,6 +42,13 @@ class Asic(DB.Model, PKId, UniquelyNamed):
         DB.Integer, DB.ForeignKey("asic_profiles.id"), nullable=True
     )
     profile: Mapped[Optional["AsicProfile"]] = relationship("AsicProfile")
+
+    override_interval_id: Mapped[int] = mapped_column(
+        DB.Integer, DB.ForeignKey("hashing_intervals.id"), nullable=True
+    )
+    override_interval: Mapped[Optional["HashingInterval"]] = relationship(
+        "HashingInterval"
+    )
 
     updated_at: Mapped[datetime] = mapped_column(
         DB.DateTime, nullable=True, onupdate=datetime.now(tz=UTC)

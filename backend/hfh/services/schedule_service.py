@@ -39,7 +39,9 @@ class ScheduleService:
                 asic=asic.name,
                 moment=moment,
                 profile=asic.profile.name or asic.profile.id if asic.profile else None,
-                schedule=current_interval.schedule.name or current_interval.schedule.id,
+                schedule=current_interval.schedule.name or current_interval.schedule.id
+                if current_interval.schedule
+                else "(override)",
                 interval=current_interval.name or current_interval.id,
                 hashing=current_interval.hashing_enabled,
                 time_start=current_interval.daytime_start,
@@ -67,8 +69,17 @@ class ScheduleService:
             await self.ensure_not_hashing(asic)
 
     def get_current_interval(
-        self, asic: Asic, moment: datetime
+        self,
+        asic: Asic,
+        moment: datetime,
+        ignore_override: Optional[bool] = False,
     ) -> Optional[HashingInterval]:
+        if not ignore_override:
+            if override := asic.override_interval:
+                if override.is_active_at(moment):
+                    LOGGER.info("Using override interval for now", asic=asic.name)
+                    return override
+
         schedule: Optional[HashingSchedule] = (
             asic.profile.schedule if asic.profile and asic.profile.schedule else None
         )

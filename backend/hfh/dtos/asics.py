@@ -39,7 +39,7 @@ class AsicSummaryDto(BaseModel):
             power=sample.power if sample else None,
             power_limit=sample.power_limit if sample else None,
             power_per_th=sample.power_per_th if sample else None,
-            hash_cost=sample.cost_per_th if sample else None,
+            hash_cost=sample.hash_cost if sample else None,
             temp=sample.temp if sample else None,
             env_temp=sample.env_temp if sample else None,
         )

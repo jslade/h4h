@@ -44,9 +44,18 @@ class PerformanceSample(DB.Model, PKId):
         return self.power * self.price_per_kwh * self.HASH_COST_SCALE
 
     @property
+    def cost_per_hr(self) -> Decimal:
+        return self.cost_per_sec * Decimal(3600)
+
+    @property
     def cost_per_th(self) -> Decimal:
         """Cost per TH $ / TH"""
-        return self.cost_per_sec / self.hash_rate
+        return self.cost_per_sec / self.hash_rate if self.hash_rate else Decimal(0)
+
+    @property
+    def hash_cost(self) -> Decimal:
+        """Cost for the sample period"""
+        return self.cost_per_sec * Decimal(self.interval_secs)
 
     asic_id: Mapped[int] = mapped_column(
         DB.Integer, DB.ForeignKey("asics.id"), nullable=False, index=True

@@ -1,11 +1,16 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time, timedelta
+from decimal import Decimal
+from typing import Optional
 import structlog
 from pyasic import AnyMiner
 from pyasic.data import MinerData
 from pyasic.data.error_codes import MinerErrorData
 
+
 from ..db import DB
 from ..models.asic import Asic, AsicStatus
+from ..models.hashing_interval import HashingInterval
+from ..models.performance_limit import PerformanceLimit
 from ..utils.data import getitem
 
 LOGGER = structlog.get_logger(__name__)
@@ -54,7 +59,7 @@ async def get_asic_data_extended(asic: Asic) -> MinerData:
     return d
 
 
-async def set_hashing(asic: Asic, hashing: bool) -> None:
+async def set_hashing(asic: Asic, hashing: bool, duration: Optional[int] = None) -> None:
     LOGGER.info("set_hashing", asic=asic.name, hashing=hashing)
     miner: AnyMiner = await asic.get_miner()
     if hashing:
@@ -62,7 +67,83 @@ async def set_hashing(asic: Asic, hashing: bool) -> None:
     else:
         await miner.stop_mining()
 
+    if duration is not None:
+        await set_override(asic, hashing=hashing, hours=duration)
+
     await update_status(asic)
+
+
+async def set_override(
+    asic: Asic,
+    *,
+    hashing: Optional[bool] = None,
+    hours: Optional[int] = None,
+    days: Optional[int] = None,
+    power_limit: Optional[int] = None,
+) -> None:
+    LOGGER.info(
+        "set_override",
+        asic=asic.name,
+        hashing=hashing,
+        hours=hours,
+        days=days,
+        power_limit=power_limit,
+    )
+
+    from .schedule_service import ScheduleService
+
+    service = ScheduleService()
+    moment = datetime.now(tz=asic.timezone)
+    current_interval = service.get_current_interval(asic, moment, ignore_override=True)
+
+    if hashing is None:
+        hashing = current_interval.is_hashing_at(moment) if current_interval else True
+
+    # Start and end days
+    date_start_mmdd = moment.strftime("%m/%d")
+
+    if days is None or days < 1:
+        days = 1
+    date_end_mmdd = (moment + timedelta(days=days)).strftime("%m/%d")
+
+    # Start an end times
+    current_interval_end = (
+        current_interval.next_end_time(moment) if current_interval else None
+    )
+    daytime_start_hhmm = moment.strftime("%H:%M")
+
+    if hours is None or hours < 1:
+        if days == 1:
+            if current_interval:
+                current_interval_end_hour = current_interval_end.hour
+                hours = current_interval_end_hour - moment.hour
+                if hours < 2:
+                    hours = 2
+
+    if hours:
+        daytime_end = moment + timedelta(hours=hours)
+    else:
+        daytime_end = datetime.combine(moment.date(), time(0, 0), tzinfo=moment.tzinfo)
+    daytime_end_hhmm = daytime_end.strftime("%H:%M")
+
+    performance_limit: Optional[PerformanceLimit] = None
+    if power_limit is not None:
+        performance_limit = PerformanceLimit(power_limit=power_limit)
+
+    override = HashingInterval(
+        hashing_enabled=hashing,
+        date_start_mmdd=date_start_mmdd,
+        date_end_mmdd=date_end_mmdd,
+        daytime_start_hhmm=daytime_start_hhmm,
+        daytime_end_hhmm=daytime_end_hhmm,
+        weekdays_active="*",
+        price_per_kwh=Decimal(0),  # TBD,
+        performance_limit=performance_limit,
+    )
+
+    DB.session.add(override)
+    asic.override_interval = override
+    DB.session.commit()
 
 
 async def set_power_limit(asic: Asic, power_limit: int) -> None:
