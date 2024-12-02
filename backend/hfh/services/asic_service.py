@@ -59,7 +59,7 @@ async def get_asic_data_extended(asic: Asic) -> MinerData:
     return d
 
 
-async def set_hashing(asic: Asic, hashing: bool, duration: Optional[int] = None) -> None:
+async def set_hashing(asic: Asic, hashing: bool, hours: Optional[int] = None) -> None:
     LOGGER.info("set_hashing", asic=asic.name, hashing=hashing)
     miner: AnyMiner = await asic.get_miner()
     if hashing:
@@ -67,8 +67,8 @@ async def set_hashing(asic: Asic, hashing: bool, duration: Optional[int] = None)
     else:
         await miner.stop_mining()
 
-    if duration is not None:
-        await set_override(asic, hashing=hashing, hours=duration)
+    if hours is not None:
+        await set_override(asic, hashing=hashing, hours=hours)
 
     await update_status(asic)
 
@@ -111,6 +111,9 @@ async def set_override(
         current_interval.next_end_time(moment) if current_interval else None
     )
     daytime_start_hhmm = moment.strftime("%H:%M")
+
+    if days and days > 1:
+        daytime_start_hhmm = "00:00"
 
     if hours is None or hours < 1:
         if days == 1:
@@ -170,15 +173,24 @@ async def update_status(asic: Asic) -> AsicStatus:
             miner: AnyMiner = await asic.get_miner()
             summary_response = await miner.api.summary()
 
-            upfreq_complete = getitem(
-                summary_response, ("SUMMARY", [0], "Upfreq Complete")
-            )
+            try:
+                upfreq_complete = getitem(
+                    summary_response, ("SUMMARY", [0], "Upfreq Complete")
+                )
+            except KeyError as ex:
+                LOGGER.debug("can't get Upfreq Complete", asic=asic.name, ex=ex)
+                upfreq_complete = None
+
             if upfreq_complete is not None:
                 asic.is_stable = upfreq_complete == 1
             else:
-                hashing_stable = getitem(
-                    summary_response, ("SUMMARY", [0], "Hash Stable")
-                )
+                try:
+                    hashing_stable = getitem(
+                        summary_response, ("SUMMARY", [0], "Hash Stable")
+                    )
+                except KeyError as ex:
+                    LOGGER.debug("can't get Hash Stable", asic=asic.name, ex=ex)
+                    hashing_stable = None
                 if hashing_stable is not None:
                     asic.is_stable = hashing_stable
 
