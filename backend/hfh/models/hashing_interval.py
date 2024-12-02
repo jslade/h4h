@@ -58,6 +58,10 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             return time(int(hr), int(mn))
 
     @cached_property
+    def is_all_day(self) -> bool:
+        return self.daytime_start_hhmm == "00:00" and self.daytime_end_hhmm == "00:00"
+
+    @cached_property
     def date_start(self) -> date:
         year = date.today().year
         dt = datetime.strptime(f"{year}/{self.date_start_mmdd}", "%Y/%m/%d")
@@ -120,5 +124,8 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
 
         d = moment.date()
         t = self.daytime_end
+
+        if self.is_all_day:
+            d = self.date_end
 
         return datetime.combine(date=d, time=t, tzinfo=moment.tzinfo)

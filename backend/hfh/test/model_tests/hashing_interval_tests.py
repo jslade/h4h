@@ -108,3 +108,15 @@ class TestHashIntervalActiveWindow:
         assert afternoon.is_active_at(moment) == afternoon_expected
         assert evening.is_active_at(moment) == evening_expected
         assert weekend.is_active_at(moment) == weekend_expected
+
+    def test_is_all_day(
+        self,
+        morning: HashingInterval,
+        afternoon: HashingInterval,
+        evening: HashingInterval,
+        weekend: HashingInterval,
+    ) -> None:
+        assert morning.is_all_day is False
+        assert afternoon.is_all_day is False
+        assert evening.is_all_day is False
+        assert weekend.is_all_day is True
