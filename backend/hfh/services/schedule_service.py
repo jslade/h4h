@@ -49,6 +49,7 @@ class ScheduleService:
                 power_limit=current_interval.performance_limit.power_limit
                 if current_interval.performance_limit
                 else None,
+                until=current_interval.next_end_time(moment),
             )
         else:
             LOGGER.debug(
@@ -77,7 +78,11 @@ class ScheduleService:
         if not ignore_override:
             if override := asic.override_interval:
                 if override.is_active_at(moment):
-                    LOGGER.info("Using override interval for now", asic=asic.name)
+                    LOGGER.info(
+                        "Using override interval for now",
+                        asic=asic.name,
+                        until=override.next_end_time(moment),
+                    )
                     return override
 
         schedule: Optional[HashingSchedule] = (
