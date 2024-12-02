@@ -93,9 +93,23 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             # LOGGER.debug("Interval.is_active_at -- out of date window")
             return False
 
-        # TODO: Weekdays active
+        if not (self.weekdays_active == "" or self.weekdays_active == "*"):
+            weekday_name = self.WEEKDAY_NAME[d.weekday()]
+            if weekday_name not in self.weekdays_active:
+                # LOGGER.debug("Interval.is_active_at -- not an active day")
+                return False
 
         return True
+
+    WEEKDAY_NAME = [
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Su",
+    ]
 
     def is_hashing_at(self, moment: datetime) -> bool:
         return self.hashing_enabled and self.is_active_at(moment)
