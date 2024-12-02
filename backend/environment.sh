@@ -1,8 +1,11 @@
 export PYTHONSTARTUP=repl.py
-
+export PYTHONPATH=/app
 
 alias ll='ls -lA'
 
 
 
-. venv/bin/activate
+if [ -d venv ]; then
+    . venv/bin/activate
+fi
+
