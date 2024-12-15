@@ -1,20 +1,19 @@
-from datetime import datetime
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 
-from hfh.models.performance_limit import PerformanceLimit
 from hfh.models.hashing_interval import HashingInterval
 from hfh.models.hashing_schedule import HashingSchedule
+from hfh.models.performance_limit import PerformanceLimit
 
-
-MTN = pytz.timezone("US/Mountain")
+MTN = ZoneInfo("US/Mountain")
 
 
 class TestHashIntervalActiveWindow:
     @pytest.fixture
     def schedule(self) -> HashingSchedule:
-        return HashingSchedule(name="fixture", timezone_name="US/Mountain")
+        return HashingSchedule(name="fixture", timezone_name="America/Denver")
 
     @pytest.fixture
     def morning(self, schedule: HashingSchedule) -> HashingInterval:
@@ -27,6 +26,7 @@ class TestHashIntervalActiveWindow:
             hashing_enabled=True,
             performance_limit=PerformanceLimit(power_limit=2000),
             weekdays_active="MoTuWeTh",
+            is_active=True,
         )
 
     @pytest.fixture
@@ -40,6 +40,7 @@ class TestHashIntervalActiveWindow:
             hashing_enabled=False,
             performance_limit=PerformanceLimit(power_limit=2000),
             weekdays_active="MonTuWeTh",
+            is_active=True,
         )
 
     @pytest.fixture
@@ -53,6 +54,7 @@ class TestHashIntervalActiveWindow:
             hashing_enabled=False,
             performance_limit=PerformanceLimit(power_limit=2000),
             weekdays_active="*",
+            is_active=True,
         )
 
     @pytest.fixture
@@ -66,6 +68,20 @@ class TestHashIntervalActiveWindow:
             hashing_enabled=False,
             performance_limit=PerformanceLimit(power_limit=2000),
             weekdays_active="SaSu",
+            is_active=True,
+        )
+
+    @pytest.fixture
+    def allday_everyday(self, schedule: HashingSchedule) -> HashingInterval:
+        return HashingInterval(
+            schedule=schedule,
+            daytime_start_hhmm="00:00",
+            daytime_end_hhmm="00:00",
+            date_start_mmdd="01/01",
+            date_end_mmdd="01/01",
+            hashing_enabled=True,
+            weekdays_active="*",
+            is_active=True,
         )
 
     @pytest.mark.parametrize(
@@ -120,3 +136,10 @@ class TestHashIntervalActiveWindow:
         assert afternoon.is_all_day is False
         assert evening.is_all_day is False
         assert weekend.is_all_day is True
+
+    def test_is_active(self, allday_everyday: HashingInterval) -> None:
+        assert allday_everyday.is_active is True
+        now = datetime.now(tz=MTN)
+        assert allday_everyday.is_active_at(now) is True
+        allday_everyday.is_active = False
+        assert allday_everyday.is_active_at(now) is False

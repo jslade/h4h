@@ -28,7 +28,14 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
     weekdays_active: Mapped[str] = mapped_column(DB.String, nullable=False)
     hashing_enabled: Mapped[bool] = mapped_column(DB.Boolean, nullable=False)
 
-    price_per_kwh: Mapped[Decimal] = mapped_column(DB.Numeric(scale=3, precision=6))
+    price_per_kwh: Mapped[Decimal] = mapped_column(
+        DB.Numeric(scale=3, precision=6), nullable=True
+    )
+
+    order: Mapped[int] = mapped_column(DB.Integer, default=0, server_default="0")
+    is_active: Mapped[bool] = mapped_column(
+        DB.Boolean, default=True, server_default="true"
+    )
 
     schedule_id: Mapped[int] = mapped_column(
         DB.Integer, DB.ForeignKey("hashing_schedules.id"), nullable=True
@@ -61,46 +68,69 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
     def is_all_day(self) -> bool:
         return self.daytime_start_hhmm == "00:00" and self.daytime_end_hhmm == "00:00"
 
-    @cached_property
-    def date_start(self) -> date:
-        year = date.today().year
+    def date_start(self, moment: datetime) -> date:
+        tz = moment.tzinfo or self.schedule.timezone if self.schedule else None
+        year = moment.year
         dt = datetime.strptime(f"{year}/{self.date_start_mmdd}", "%Y/%m/%d")
-        dt = dt.astimezone(self.schedule.timezone) if self.schedule else dt
+        if tz:
+            dt = dt.replace(tzinfo=tz)
+
+        if dt > moment:
+            dt = dt.replace(year=year - 1)
         return dt.date()
 
-    @cached_property
-    def date_end(self) -> date:
-        year = date.today().year
+    def date_end(self, moment: datetime) -> date:
+        tz = moment.tzinfo or self.schedule.timezone if self.schedule else None
+        year = moment.year
         dt = datetime.strptime(f"{year}/{self.date_end_mmdd}", f"%Y/%m/%d")
+        if tz:
+            dt = dt.replace(tzinfo=tz)
+
         d = dt.date()
-        if d <= self.date_start:
+        if d <= self.date_start(moment):
             d = d.replace(year=year + 1)
         return d
 
     def is_active_at(self, moment: datetime) -> bool:
-        t = moment.time()
-        d = moment.date()
-        # LOGGER.debug(
-        #    "Interval.is_active_at",
-        #    start=self.daytime_start,
-        #    end=self.daytime_end,
-        #    time=t,
-        #    date=d,
-        #    moment=moment,
-        # )
-
-        if t < self.daytime_start or t >= self.daytime_end:
-            # LOGGER.debug("Interval.is_active_at -- out of time window")
+        if not self.is_active:
             return False
 
-        if d < self.date_start or d > self.date_end:
-            # LOGGER.debug("Interval.is_active_at -- out of date window")
+        # import ipdb
+
+        # ipdb.set_trace()
+        t = moment.time()
+        d = moment.date()
+        LOGGER.debug(
+            "Interval.is_active_at",
+            start=self.daytime_start,
+            end=self.daytime_end,
+            time=t,
+            date=d,
+            moment=moment,
+        )
+
+        if t < self.daytime_start or t >= self.daytime_end:
+            LOGGER.debug(
+                "Interval.is_active_at -- out of time window",
+                moment=moment,
+                daytime_start=self.daytime_start,
+                daytime_end=self.daytime_end,
+            )
+            return False
+
+        if d < self.date_start(moment) or d > self.date_end(moment):
+            LOGGER.debug(
+                "Interval.is_active_at -- out of date window",
+                moment=moment,
+                date_start=self.date_start(moment),
+                date_end=self.date_end(moment),
+            )
             return False
 
         if not (self.weekdays_active == "" or self.weekdays_active == "*"):
             weekday_name = self.WEEKDAY_NAME[d.weekday()]
             if weekday_name not in self.weekdays_active:
-                # LOGGER.debug("Interval.is_active_at -- not an active day")
+                LOGGER.debug("Interval.is_active_at -- not an active day")
                 return False
 
         return True
@@ -129,3 +159,12 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             d = self.date_end
 
         return datetime.combine(date=d, time=t, tzinfo=moment.tzinfo)
+
+    def __repr__(self) -> str:
+        return (
+            f"<Interval {self.id} \"{self.name}\" "
+            f"{'ON' if self.hashing_enabled else 'OFF'} "
+            f"{self.date_start_mmdd}-{self.date_end_mmdd} "
+            f"{self.daytime_start_hhmm}-{self.daytime_end_hhmm} "
+            f"{self.weekdays_active}{'' if self.is_active else ' [inactive]'}>"
+        )

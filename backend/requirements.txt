@@ -10,7 +10,6 @@ psycopg2==2.9.9
 pyasic==0.39.3
 pydantic
 pytest
-pytz
 ruff
 sqlalchemy==2.0.28
 structlog

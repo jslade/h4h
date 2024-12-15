@@ -25,9 +25,9 @@ class AsicSummaryDto(BaseModel):
     def from_asic(cls, asic: Asic) -> Self:
         sample = asic.samples[-1] if asic.samples else None
 
-        updated_at = asic.updated_at.astimezone(asic.timezone)
-        changed_at = (asic.changed_at or asic.updated_at).astimezone(asic.timezone)
-        sampled_at = sample.timestamp.astimezone(asic.timezone) if sample else None
+        updated_at = asic.updated_at.replace(tzinfo=asic.timezone)
+        changed_at = (asic.changed_at or asic.updated_at).replace(tzinfo=asic.timezone)
+        sampled_at = sample.timestamp.replace(tzinfo=asic.timezone) if sample else None
 
         return AsicSummaryDto(
             name=asic.name,
