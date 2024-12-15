@@ -8,21 +8,21 @@ import API from '../../api';
 const api = new API();
 
 export default function Summary() {
-    const {isPending, error, data: summary_data} = useQuery({
-        queryKey: ['asic/summary'],
-        queryFn: () => api.GET({ path:`/asic/summary`}).then((data) => data),
+    const {isLoading, error, data: active_data} = useQuery({
+        queryKey: ['asic/active'],
+        queryFn: () => api.GET({ path:`/asic/active`}).then((data) => data),
         refetchInterval: 60_000
     })
     
-    function renderSummary(summary_data) {
+    function renderSummary(active_data) {
         return (<ul>
-            {summary_data.asics.map((asic) => <><SummaryCard asic_summary={asic} /><br/></>)}
+            {active_data.asics.map((name) => <><SummaryCard key={name} name={name} /><br/></>)}
         </ul>);
     }
 
     return (
       <div>
-        {isPending? "Loading..." : renderSummary(summary_data)}
+        {isLoading? "Loading..." : renderSummary(active_data)}
       </div>
     )
   }

@@ -4,6 +4,8 @@ from typing import Optional, Self
 
 from pydantic import BaseModel, AwareDatetime
 
+from ..services.schedule_service import ScheduleService
+
 from ..models.asic import Asic, AsicStatus
 
 
@@ -13,6 +15,8 @@ class AsicSummaryDto(BaseModel):
     updated_at: AwareDatetime
     changed_at: AwareDatetime
     sampled_at: Optional[AwareDatetime]
+    interval_name: Optional[str]
+    interval_until: Optional[AwareDatetime]
     hash_rate: Optional[int]
     power: Optional[int]
     power_limit: Optional[int]
@@ -29,12 +33,18 @@ class AsicSummaryDto(BaseModel):
         changed_at = (asic.changed_at or asic.updated_at).replace(tzinfo=asic.timezone)
         sampled_at = sample.timestamp.replace(tzinfo=asic.timezone) if sample else None
 
+        scheduler = ScheduleService()
+        moment = datetime.now(tz=asic.timezone)
+        interval = scheduler.get_current_interval(asic, moment=moment)
+
         return AsicSummaryDto(
             name=asic.name,
             status=AsicStatus.for_asic(asic),
             updated_at=updated_at,
             changed_at=changed_at,
             sampled_at=sampled_at,
+            interval_name=(interval.name or "null") if interval else None,
+            interval_until=interval.next_end_time(moment) if interval else None,
             hash_rate=sample.hash_rate if sample else None,
             power=sample.power if sample else None,
             power_limit=sample.power_limit if sample else None,
@@ -47,3 +57,7 @@ class AsicSummaryDto(BaseModel):
 
 class AsicsSummaryDto(BaseModel):
     asics: list[AsicSummaryDto]
+
+
+class AsicsListDto(BaseModel):
+    asics: list[str]

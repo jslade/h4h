@@ -134,6 +134,7 @@ async def set_override(
         performance_limit = PerformanceLimit(power_limit=power_limit)
 
     override = HashingInterval(
+        name="override",
         hashing_enabled=hashing,
         date_start_mmdd=date_start_mmdd,
         date_end_mmdd=date_end_mmdd,

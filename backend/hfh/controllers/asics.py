@@ -1,7 +1,7 @@
 import asyncio
 
 from ..app import APP
-from ..dtos.asics import AsicsSummaryDto, AsicStatus, AsicSummaryDto
+from ..dtos.asics import AsicsListDto, AsicsSummaryDto, AsicStatus, AsicSummaryDto
 from ..models.asic import Asic
 from ..services.asic_service import (
     get_asic_data,
@@ -38,14 +38,20 @@ def get_asic_raw_errors(name: str) -> dict:
     return raw
 
 
-@APP.route("/api/asic/summary", methods=["GET"])
-def get_asic_summary_all() -> dict:
+@APP.route("/api/asic/active", methods=["GET"])
+def get_asic_list_active() -> dict:
     active = Asic.all_active()
 
     with validate_pydantic_response():
-        return AsicsSummaryDto(
-            asics=[AsicSummaryDto.from_asic(asic) for asic in active]
-        ).model_dump()
+        return AsicsListDto(asics=[asic.name for asic in active]).model_dump()
+
+
+@APP.route("/api/asic/<name>/summary", methods=["GET"])
+def get_asic_summary(name: str) -> dict:
+    asic = Asic.with_name(name)
+
+    with validate_pydantic_response():
+        return AsicSummaryDto.from_asic(asic).model_dump()
 
 
 @APP.route("/api/asic/<name>/set-hashing/<state>", methods=["PUT", "PATCH"])

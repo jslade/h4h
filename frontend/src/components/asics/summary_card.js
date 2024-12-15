@@ -1,4 +1,11 @@
 import React from 'react'
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query'
+
+import ReactJson from '@microlink/react-json-view'
+
+import API from '../../api';
+
 import { Link, Card } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -6,6 +13,8 @@ import Grid from '@mui/material/Unstable_Grid2';
 
 import DualTempField from '../temps/dual_temp_field';
 import { to_locale_string } from '../../utils/times';
+
+const api = new API();
 
 const Item = styled(Card)(({ theme, align }) => ({
   //backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -16,13 +25,22 @@ const Item = styled(Card)(({ theme, align }) => ({
 }));
 
 
-export default function SummaryCard({asic_summary}) {
+export default function SummaryCard({name}) {
+  const {isLoading, isFetching, data: asic_summary} = useQuery({
+    queryKey: ['asic/summary', name],
+    queryFn: () => api.GET({ path:`/asic/${name}/summary`}).then((data) => data),
+    refetchInterval: 60_000
+})
+
+  if (isLoading) {
+    return <h2>Loading {name}</h2>
+  }
 
   return (
     <Box sx={{ flexGrow: 1 }} className={`summary-card summary-status-${asic_summary.status}`}>
       <Grid container spacing={1}>
         <Grid xs={10} >
-          <Item align="left" className={`summary-status-${asic_summary.status}`}>{asic_summary.name}</Item>
+          <Item align="left" className={`summary-status-${asic_summary.status}`}>{asic_summary.name}{isFetching && " (fetching)"}</Item>
         </Grid>
         <Grid xs={2} >
           <Item align="right"><Link href={`/asics/raw/${asic_summary.name}`} target="_blank">see raw</Link></Item>
@@ -33,6 +51,13 @@ export default function SummaryCard({asic_summary}) {
         </Grid>
         <Grid xs={9} >
           <Item align="left"><span title={"Since " + to_locale_string(asic_summary.changed_at)}>{asic_summary.status}</span></Item>
+        </Grid>
+
+        <Grid xs={3} >
+          <Item align="right">Interval:</Item>
+        </Grid>
+        <Grid xs={9} >
+          <Item align="left">{asic_summary.interval_name ? asic_summary.interval_name + " until " + to_locale_string(asic_summary.interval_until) : "(none)"}</Item>
         </Grid>
 
         <Grid xs={3} >

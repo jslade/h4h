@@ -69,7 +69,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         return self.daytime_start_hhmm == "00:00" and self.daytime_end_hhmm == "00:00"
 
     def date_start(self, moment: datetime) -> date:
-        tz = moment.tzinfo or self.schedule.timezone if self.schedule else None
+        tz = moment.tzinfo or (self.schedule.timezone if self.schedule else None)
         year = moment.year
         dt = datetime.strptime(f"{year}/{self.date_start_mmdd}", "%Y/%m/%d")
         if tz:
@@ -80,7 +80,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         return dt.date()
 
     def date_end(self, moment: datetime) -> date:
-        tz = moment.tzinfo or self.schedule.timezone if self.schedule else None
+        tz = moment.tzinfo or (self.schedule.timezone if self.schedule else None)
         year = moment.year
         dt = datetime.strptime(f"{year}/{self.date_end_mmdd}", f"%Y/%m/%d")
         if tz:
@@ -95,9 +95,6 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         if not self.is_active:
             return False
 
-        # import ipdb
-
-        # ipdb.set_trace()
         t = moment.time()
         d = moment.date()
         LOGGER.debug(
