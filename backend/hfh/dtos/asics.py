@@ -27,7 +27,7 @@ class AsicSummaryDto(BaseModel):
 
     @classmethod
     def from_asic(cls, asic: Asic) -> Self:
-        sample = asic.samples[-1] if asic.samples else None
+        sample = asic.latest_sample
 
         updated_at = asic.updated_at.replace(tzinfo=asic.timezone)
         changed_at = (asic.changed_at or asic.updated_at).replace(tzinfo=asic.timezone)

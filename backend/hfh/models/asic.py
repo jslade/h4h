@@ -85,6 +85,12 @@ class Asic(DB.Model, PKId, UniquelyNamed):
             self._miner.pwd = self.password
         return self._miner
 
+    @property
+    def latest_sample(self) -> Optional["PerformanceSample"]:
+        from .performance_sample import PerformanceSample
+
+        return PerformanceSample.latest_for(self)
+
     @classmethod
     def all_active(cls, db_session: Optional[DbSession] = None) -> list[Self]:
         db_session = db_session or DB.session

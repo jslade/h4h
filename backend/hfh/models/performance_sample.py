@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Self
 
 import structlog
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -61,3 +61,11 @@ class PerformanceSample(DB.Model, PKId):
         DB.Integer, DB.ForeignKey("asics.id"), nullable=False, index=True
     )
     asic: Mapped["Asic"] = relationship("Asic", back_populates="samples")
+
+    @classmethod
+    def latest_for(cls, asic: "Asic") -> Optional[Self]:
+        return (
+            cls.query.filter(cls.asic_id == asic.id)
+            .order_by(cls.timestamp.desc())
+            .first()
+        )

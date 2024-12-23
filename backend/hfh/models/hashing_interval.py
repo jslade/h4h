@@ -153,7 +153,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         t = self.daytime_end
 
         if self.is_all_day:
-            d = self.date_end
+            d = self.date_end(moment)
 
         return datetime.combine(date=d, time=t, tzinfo=moment.tzinfo)
 
