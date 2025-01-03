@@ -23,14 +23,14 @@ class SamplingService:
         for asic in Asic.all_active():
             try:
                 await self.add_sample(asic, interval)
+                DB.session.commit()
             except Exception as ex:
                 LOGGER.exception(
                     "Failed to sample asic",
                     asic=asic.name,
                     exception=ex,
                 )
-
-        DB.session.commit()
+                DB.session.rollback()
 
     async def add_sample(self, asic: Asic, interval: int) -> None:
         await update_status(asic)
