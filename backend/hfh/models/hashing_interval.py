@@ -114,7 +114,6 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
                     "HashingInterval.is_active_under -- temp threshold not met",
                     interval=self,
                     scenario_temp=scenario.temp,
-                    temp_threshold=self.temp_threshold,
                 )
                 return False
 
@@ -204,5 +203,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             f"{'ON' if self.hashing_enabled else 'OFF'} "
             f"{self.date_start_mmdd}-{self.date_end_mmdd} "
             f"{self.daytime_start_hhmm}-{self.daytime_end_hhmm} "
+            f"[{'' if self.temp_min is None else self.temp_min},"
+            f"{'' if self.temp_max is None else self.temp_max}] "
             f"{self.weekdays_active}{'' if self.is_active else ' [inactive]'}>"
         )
