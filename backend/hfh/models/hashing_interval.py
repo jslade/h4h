@@ -117,6 +117,11 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
                 )
                 return False
 
+        LOGGER.debug(
+            "HashingInterval.is_active_under -- YES",
+            interval=self,
+            scenario=scenario,
+        )
         return True
 
     def is_active_at(self, moment: datetime) -> bool:
@@ -128,6 +133,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         LOGGER.debug(
             "Interval.is_active_at",
             interval=self,
+            moment=moment,
         )
 
         if t < self.daytime_start or t >= self.daytime_end:

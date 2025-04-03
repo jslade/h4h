@@ -105,6 +105,7 @@ class AsicStatus(str, Enum):
     paused = "paused"
     error = "error"
 
+    @staticmethod
     def for_asic(asic: Asic) -> Self:
         if asic.is_hashing:
             if asic.is_stable:
