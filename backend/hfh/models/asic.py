@@ -66,7 +66,7 @@ class Asic(DB.Model, PKId, UniquelyNamed):
             dt = datetime.now(tz=self.timezone)
 
         if not dt.tzinfo:
-            return dt.replace(tzinfo=UTC)
+            dt = dt.replace(tzinfo=UTC)
 
         return dt.astimezone(self.timezone)
 
