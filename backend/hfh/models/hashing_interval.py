@@ -104,7 +104,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             LOGGER.debug(
                 "HashingInterval.is_active_under -- inactive at scenario moment",
                 interval=self,
-                scenario_moment=scenario.moment,
+                moment=scenario.moment,
             )
             return False
 
@@ -113,7 +113,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
                 LOGGER.debug(
                     "HashingInterval.is_active_under -- temp threshold not met",
                     interval=self,
-                    scenario_temp=scenario.temp,
+                    temp=scenario.temp,
                 )
                 return False
 
@@ -127,16 +127,13 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         d = moment.date()
         LOGGER.debug(
             "Interval.is_active_at",
-            start=self.daytime_start,
-            end=self.daytime_end,
-            time=t,
-            date=d,
-            moment=moment,
+            interval=self,
         )
 
         if t < self.daytime_start or t >= self.daytime_end:
             LOGGER.debug(
                 "Interval.is_active_at -- out of time window",
+                interval=self,
                 moment=moment,
                 daytime_start=self.daytime_start,
                 daytime_end=self.daytime_end,
@@ -146,6 +143,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         if d < self.date_start(moment) or d > self.date_end(moment):
             LOGGER.debug(
                 "Interval.is_active_at -- out of date window",
+                interval=self,
                 moment=moment,
                 date_start=self.date_start(moment),
                 date_end=self.date_end(moment),
@@ -155,7 +153,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         if not (self.weekdays_active == "" or self.weekdays_active == "*"):
             weekday_name = self.WEEKDAY_NAME[d.weekday()]
             if weekday_name not in self.weekdays_active:
-                LOGGER.debug("Interval.is_active_at -- not an active day")
+                LOGGER.debug("Interval.is_active_at -- not an active day", interval=self)
                 return False
 
         return True
