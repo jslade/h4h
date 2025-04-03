@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Optional
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -143,3 +144,57 @@ class TestHashIntervalActiveWindow:
         assert allday_everyday.is_active_at(now) is True
         allday_everyday.is_active = False
         assert allday_everyday.is_active_at(now) is False
+
+    @pytest.mark.parametrize(
+        "temp, temp_min, temp_max, expected",
+        [
+            (
+                50,
+                None,
+                None,
+                True,
+            ),
+            (
+                50,
+                40,
+                None,
+                True,
+            ),
+            (
+                50,
+                None,
+                60,
+                True,
+            ),
+            (
+                50,
+                60,
+                None,
+                False,
+            ),
+            (
+                50,
+                40,
+                60,
+                True,
+            ),
+            (
+                50,
+                55,
+                60,
+                False,
+            ),
+        ],
+    )
+    def test_is_active_temp(
+        self,
+        allday_everyday: HashingInterval,
+        temp: int,
+        temp_min: Optional[int],
+        temp_max: Optional[int],
+        expected: bool,
+    ) -> None:
+        allday_everyday.temp_min = temp_min
+        allday_everyday.temp_max = temp_max
+
+        assert allday_everyday.is_active_at_temp(temp) is expected

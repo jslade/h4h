@@ -37,9 +37,12 @@ class SamplingService:
         data = await get_asic_data(asic)
 
         moment = datetime.now(tz=asic.timezone)
+        temp = data.env_temp
 
         current_schedule_interval = self.schedule_service.get_current_interval(
-            asic, moment
+            asic,
+            moment=moment,
+            temp=temp,
         )
         current_price_per_kwh = (
             current_schedule_interval.price_per_kwh if current_schedule_interval else None

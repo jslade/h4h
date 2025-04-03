@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Optional
 
 import structlog
@@ -7,6 +7,7 @@ from ..db import DB
 from ..models.asic import Asic, AsicStatus
 from ..models.hashing_interval import HashingInterval
 from ..models.hashing_schedule import HashingSchedule
+from ..models.scenario import Scenario
 from .asic_service import get_asic_data, set_hashing, set_power_limit
 
 LOGGER = structlog.get_logger(__name__)
@@ -16,8 +17,16 @@ class ScheduleService:
     async def update_all_active(self) -> None:
         LOGGER.info("updating all active asics according to schedule")
         for asic in Asic.all_active():
-            await self.update(asic)
-            DB.session.commit()
+            try:
+                await self.update(asic)
+                DB.session.commit()
+            except Exception as ex:
+                LOGGER.exception(
+                    "Failed to update asic",
+                    asic=asic.name,
+                    exception=ex,
+                )
+                DB.session.rollback()
 
     async def update(self, asic: Asic) -> None:
         if not asic.is_online:
@@ -25,14 +34,22 @@ class ScheduleService:
             return
 
         moment = datetime.now(tz=asic.timezone)
+        sample = asic.latest_sample
+        temp = sample.env_temp if sample else None
+
         LOGGER.debug(
             "Updating asic operation by schedule constraints",
             asic=asic.name,
             status=AsicStatus.for_asic(asic),
             moment=moment,
+            temp=temp,
         )
 
-        current_interval = self.get_current_interval(asic, moment)
+        current_interval = self.get_current_interval(
+            asic,
+            moment=moment,
+            temp=temp,
+        )
         if current_interval:
             LOGGER.debug(
                 "current_interval",
@@ -73,11 +90,17 @@ class ScheduleService:
         self,
         asic: Asic,
         moment: datetime,
+        temp: Optional[int] = None,
         ignore_override: Optional[bool] = False,
     ) -> Optional[HashingInterval]:
+        scenario = Scenario(
+            moment=moment,
+            temp=temp,
+        )
+
         if not ignore_override:
             if override := asic.override_interval:
-                if override.is_active_at(moment):
+                if override.is_active_under(scenario):
                     LOGGER.info(
                         "Using override interval for now",
                         asic=asic.name,
@@ -93,7 +116,7 @@ class ScheduleService:
 
         interval: HashingInterval
         for interval in schedule.intervals:
-            if interval.is_active_at(moment):
+            if interval.is_active_under(scenario):
                 return interval
 
         return None

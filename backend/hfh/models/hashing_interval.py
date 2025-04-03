@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import DB
 from .mixins import OptionallyNamed, PKId
+from .scenario import Scenario
 
 if TYPE_CHECKING:
     from .hashing_schedule import HashingSchedule
@@ -24,6 +25,13 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
 
     date_start_mmdd: Mapped[str] = mapped_column(DB.String, nullable=False)
     date_end_mmdd: Mapped[str] = mapped_column(DB.String, nullable=False)
+
+    temp_min: Mapped[Optional[int]] = mapped_column(  # deg C
+        DB.Integer, nullable=True, default=0, server_default="0"
+    )
+    temp_max: Mapped[Optional[int]] = mapped_column(  # deg C
+        DB.Integer, nullable=True, default=0, server_default="0"
+    )
 
     weekdays_active: Mapped[str] = mapped_column(DB.String, nullable=False)
     hashing_enabled: Mapped[bool] = mapped_column(DB.Boolean, nullable=False)
@@ -91,6 +99,27 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             d = d.replace(year=year + 1)
         return d
 
+    def is_active_under(self, scenario: Scenario) -> bool:
+        if not self.is_active_at(scenario.moment):
+            LOGGER.debug(
+                "HashingInterval.is_active_under -- inactive at scenario moment",
+                interval=self,
+                scenario_moment=scenario.moment,
+            )
+            return False
+
+        if scenario.temp is not None:
+            if not self.is_active_at_temp(scenario.temp):
+                LOGGER.debug(
+                    "HashingInterval.is_active_under -- temp threshold not met",
+                    interval=self,
+                    scenario_temp=scenario.temp,
+                    temp_threshold=self.temp_threshold,
+                )
+                return False
+
+        return True
+
     def is_active_at(self, moment: datetime) -> bool:
         if not self.is_active:
             return False
@@ -129,6 +158,18 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             if weekday_name not in self.weekdays_active:
                 LOGGER.debug("Interval.is_active_at -- not an active day")
                 return False
+
+        return True
+
+    def is_active_at_temp(self, temp: int) -> bool:
+        if not self.is_active:
+            return False
+
+        if self.temp_min is not None and temp < self.temp_min:
+            return False
+
+        if self.temp_max is not None and temp > self.temp_max:
+            return False
 
         return True
 
