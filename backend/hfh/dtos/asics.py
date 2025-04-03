@@ -33,7 +33,9 @@ class AsicSummaryDto(BaseModel):
 
         scheduler = ScheduleService()
         moment = asic.local_time()
-        interval = scheduler.get_current_interval(asic, moment=moment)
+        interval = scheduler.get_current_interval(
+            asic, moment=moment, temp=sample.env_temp if sample else None
+        )
 
         return AsicSummaryDto(
             name=asic.name,
