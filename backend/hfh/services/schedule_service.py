@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 import structlog
@@ -36,6 +36,10 @@ class ScheduleService:
         moment = datetime.now(tz=asic.timezone)
         sample = asic.latest_sample
         temp = sample.env_temp if sample else None
+
+        if not self.can_change_hashing(asic, moment=moment):
+            LOGGER.debug("Ignoring unstable or transitioning asic", asic=asic.name)
+            return
 
         LOGGER.debug(
             "Updating asic operation by schedule constraints",
@@ -85,6 +89,25 @@ class ScheduleService:
         else:
             LOGGER.debug("should not be hashing", asic=asic.name)
             await self.ensure_not_hashing(asic)
+
+    def can_change_hashing(self, asic: Asic, moment: datetime) -> bool:
+        """
+        Determine if we can change the hashing state of the ASIC based on its current status.
+        """
+        status = AsicStatus.for_asic(asic)
+        if status in (AsicStatus.error, AsicStatus.offline):
+            return True
+
+        since_changed = moment - (asic.changed_at if asic.changed_at else datetime.min)
+        if since_changed < timedelta(minutes=30):
+            LOGGER.debug(
+                "Too soon since last change to hashing state",
+                asic=asic.name,
+                since_changed=since_changed,
+            )
+            return False
+
+        return True
 
     def get_current_interval(
         self,

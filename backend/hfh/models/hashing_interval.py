@@ -27,10 +27,10 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
     date_end_mmdd: Mapped[str] = mapped_column(DB.String, nullable=False)
 
     temp_min: Mapped[Optional[int]] = mapped_column(  # deg C
-        DB.Integer, nullable=True, default=0, server_default="0"
+        DB.Integer, nullable=True
     )
     temp_max: Mapped[Optional[int]] = mapped_column(  # deg C
-        DB.Integer, nullable=True, default=0, server_default="0"
+        DB.Integer, nullable=True
     )
 
     weekdays_active: Mapped[str] = mapped_column(DB.String, nullable=False)
