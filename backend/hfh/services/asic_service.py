@@ -1,11 +1,11 @@
 from datetime import UTC, datetime, time, timedelta
 from decimal import Decimal
 from typing import Optional
+
 import structlog
 from pyasic import AnyMiner
 from pyasic.data import MinerData
 from pyasic.data.error_codes import MinerErrorData
-
 
 from ..db import DB
 from ..models.asic import Asic, AsicStatus
@@ -93,7 +93,7 @@ async def set_override(
     from .schedule_service import ScheduleService
 
     service = ScheduleService()
-    moment = datetime.now(tz=asic.timezone)
+    moment = asic.local_time()
     current_interval = service.get_current_interval(asic, moment, ignore_override=True)
 
     if hashing is None:
@@ -198,7 +198,7 @@ async def update_status(asic: Asic) -> AsicStatus:
     except Exception as ex:
         LOGGER.info("asic appears to be offline", asic=asic.name, ex=ex)
 
-    asic.updated_at = datetime.now(tz=asic.timezone)
+    asic.updated_at = asic.local_time()
 
     status = AsicStatus.for_asic(asic)
 

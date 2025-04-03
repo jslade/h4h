@@ -61,6 +61,15 @@ class Asic(DB.Model, PKId, UniquelyNamed):
         order_by="PerformanceSample.timestamp",
     )
 
+    def local_time(self, dt: Optional[datetime] = None) -> datetime:
+        if dt is None:
+            dt = datetime.now(tz=self.timezone)
+
+        if not dt.tzinfo:
+            return dt.replace(tzinfo=UTC)
+
+        return dt.astimezone(self.timezone)
+
     @cached_property
     def timezone(self) -> timezone:
         if self.profile and self.profile.schedule:

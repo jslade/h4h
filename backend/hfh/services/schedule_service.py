@@ -33,7 +33,7 @@ class ScheduleService:
             LOGGER.debug("Ignoring offline", asic=asic.name)
             return
 
-        moment = datetime.now(tz=asic.timezone)
+        moment = asic.local_time()
         sample = asic.latest_sample
         temp = sample.env_temp if sample else None
 
@@ -98,9 +98,9 @@ class ScheduleService:
         if status in (AsicStatus.error, AsicStatus.offline):
             return True
 
-        changed_at = (
+        changed_at = asic.local_time(
             asic.changed_at if asic.changed_at else datetime(2020, 1, 1)
-        ).replace(tzinfo=asic.timezone)
+        )
         since_changed = moment - changed_at
         if since_changed < timedelta(minutes=30):
             LOGGER.debug(

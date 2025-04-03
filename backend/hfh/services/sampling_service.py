@@ -1,9 +1,7 @@
-from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Optional
 
 import structlog
-
 
 from ..db import DB
 from ..models.asic import Asic
@@ -36,7 +34,7 @@ class SamplingService:
         await update_status(asic)
         data = await get_asic_data(asic)
 
-        moment = datetime.now(tz=asic.timezone)
+        moment = asic.local_time()
         temp = data.env_temp
 
         current_schedule_interval = self.schedule_service.get_current_interval(

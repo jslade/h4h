@@ -1,12 +1,10 @@
-from datetime import datetime
 from decimal import Decimal
 from typing import Optional, Self
 
-from pydantic import BaseModel, AwareDatetime
-
-from ..services.schedule_service import ScheduleService
+from pydantic import AwareDatetime, BaseModel
 
 from ..models.asic import Asic, AsicStatus
+from ..services.schedule_service import ScheduleService
 
 
 class AsicSummaryDto(BaseModel):
@@ -29,12 +27,12 @@ class AsicSummaryDto(BaseModel):
     def from_asic(cls, asic: Asic) -> Self:
         sample = asic.latest_sample
 
-        updated_at = asic.updated_at.replace(tzinfo=asic.timezone)
-        changed_at = (asic.changed_at or asic.updated_at).replace(tzinfo=asic.timezone)
-        sampled_at = sample.timestamp.replace(tzinfo=asic.timezone) if sample else None
+        updated_at = asic.local_time(asic.updated_at)
+        changed_at = asic.local_time((asic.changed_at or asic.updated_at))
+        sampled_at = asic.local_time(sample.timestamp) if sample else None
 
         scheduler = ScheduleService()
-        moment = datetime.now(tz=asic.timezone)
+        moment = asic.local_time()
         interval = scheduler.get_current_interval(asic, moment=moment)
 
         return AsicSummaryDto(

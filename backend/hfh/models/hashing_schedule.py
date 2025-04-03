@@ -23,7 +23,7 @@ class HashingSchedule(DB.Model, PKId, OptionallyNamed):
     intervals: Mapped[list["HashingInterval"]] = relationship(
         "HashingInterval",
         back_populates="schedule",
-        order_by="HashingInterval.is_active, "
+        order_by="desc(HashingInterval.is_active), "
         "HashingInterval.order, "
         "HashingInterval.date_start_mmdd, "
         "HashingInterval.date_end_mmdd, "
