@@ -98,9 +98,10 @@ class ScheduleService:
         if status in (AsicStatus.error, AsicStatus.offline):
             return True
 
-        since_changed = moment - (
-            asic.changed_at if asic.changed_at else datetime(2020, 1, 1, tz=asic.timezone)
-        )
+        changed_at = (
+            asic.changed_at if asic.changed_at else datetime(2020, 1, 1)
+        ).replace(tzinfo=asic.timezone)
+        since_changed = moment - changed_at
         if since_changed < timedelta(minutes=30):
             LOGGER.debug(
                 "Too soon since last change to hashing state",
