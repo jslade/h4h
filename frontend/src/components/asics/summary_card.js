@@ -91,7 +91,7 @@ export default function SummaryCard({name}) {
           <Item align="right">Efficiency:</Item>
         </Grid>
         <Grid xs={9} >
-          <Item align="left">{asic_summary.power_per_th} TH/W</Item>
+          <Item align="left">{asic_summary.power_per_th} W/TH</Item>
         </Grid>
 
         <Grid xs={3} >
