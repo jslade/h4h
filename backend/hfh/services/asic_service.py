@@ -63,9 +63,19 @@ async def set_hashing(asic: Asic, hashing: bool, hours: Optional[int] = None) ->
     LOGGER.info("set_hashing", asic=asic.name, hashing=hashing)
     miner: AnyMiner = await asic.get_miner()
     if hashing:
-        await miner.resume_mining()
+        resumed = await miner.resume_mining()
+        if not resumed:
+            LOGGER.warning(
+                "resume_mining failed",
+                asic=asic.name,
+            )
     else:
-        await miner.stop_mining()
+        stopped = await miner.stop_mining()
+        if not stopped:
+            LOGGER.warning(
+                "stop_mining failed",
+                asic=asic.name,
+            )
 
     if hours is not None:
         await set_override(asic, hashing=hashing, hours=hours)
