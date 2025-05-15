@@ -6,6 +6,9 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
+RUN apt-get update && apt-get install -y \
+    emacs-nox
+
 COPY . .
 
 ENV FLASK_ENV=development
