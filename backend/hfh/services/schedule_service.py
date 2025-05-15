@@ -85,10 +85,10 @@ class ScheduleService:
         if self.should_be_hashing(asic, current_interval, moment):
             LOGGER.debug("should be hashing", asic=asic.name)
             await self.ensure_is_hashing(asic)
-            await self.ensure_power_limit(asic, current_interval)
         else:
             LOGGER.debug("should not be hashing", asic=asic.name)
             await self.ensure_not_hashing(asic)
+        await self.ensure_power_limit(asic, current_interval)
 
     def can_change_hashing(self, asic: Asic, moment: datetime) -> bool:
         """
@@ -164,15 +164,28 @@ class ScheduleService:
         self, asic: Asic, interval: Optional[HashingInterval]
     ) -> None:
         if not (interval and interval.performance_limit):
+            LOGGER.debug(
+                "Asic has no perf limit for current interval",
+                asic=asic.name,
+                interval=interval if interval else None,
+            )
             return
 
         expected_power_limit = interval.performance_limit.power_limit
         try:
-            last_sample = asic.samples[-1]
-            current_power_limit = last_sample.power_limit
+            last_sample = asic.latest_sample
+            current_power_limit = last_sample.power_limit if last_sample else None
         except Exception:
             data = await get_asic_data(asic)
             current_power_limit = data.wattage_limit
+
+        LOGGER.info(
+            "Asic expected power_limit",
+            asic=asic.name,
+            current=current_power_limit,
+            expected=expected_power_limit,
+            interval=interval,
+        )
 
         if current_power_limit != expected_power_limit:
             LOGGER.info(
