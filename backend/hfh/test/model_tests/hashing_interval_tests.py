@@ -85,6 +85,19 @@ class TestHashIntervalActiveWindow:
             is_active=True,
         )
 
+    @pytest.fixture
+    def override(self, schedule: HashingSchedule) -> HashingInterval:
+        return HashingInterval(
+            schedule=schedule,
+            daytime_start_hhmm="21:00",
+            daytime_end_hhmm="12:34",
+            date_start_mmdd="05/14",
+            date_end_mmdd="05/15",
+            hashing_enabled=True,
+            weekdays_active="*",
+            is_active=True,
+        )
+
     @pytest.mark.parametrize(
         (
             "moment",
@@ -125,6 +138,27 @@ class TestHashIntervalActiveWindow:
         assert afternoon.is_active_at(moment) == afternoon_expected
         assert evening.is_active_at(moment) == evening_expected
         assert weekend.is_active_at(moment) == weekend_expected
+
+    @pytest.mark.parametrize(
+        (
+            "moment",
+            "expected",
+        ),
+        [
+            (datetime(2025, 5, 14, 9, 0, tzinfo=MTN), False),
+            (datetime(2025, 5, 14, 23, 0, tzinfo=MTN), True),
+            (datetime(2025, 5, 15, 0, 0, tzinfo=MTN), True),
+            (datetime(2025, 5, 15, 12, 35, tzinfo=MTN), False),
+            (datetime(2025, 5, 15, 23, 0, tzinfo=MTN), False),
+        ],
+    )
+    def test_is_active_at_override(
+        self,
+        override: HashingInterval,
+        moment: datetime,
+        expected: bool,
+    ) -> None:
+        assert override.is_active_at(moment) == expected
 
     def test_is_all_day(
         self,

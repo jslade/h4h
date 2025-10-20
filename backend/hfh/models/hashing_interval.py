@@ -134,17 +134,9 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
             "Interval.is_active_at",
             interval=self,
             moment=moment,
+            daytime_start=self.daytime_start,
+            daytime_end=self.daytime_end,
         )
-
-        if t < self.daytime_start or t >= self.daytime_end:
-            LOGGER.debug(
-                "Interval.is_active_at -- out of time window",
-                interval=self,
-                moment=moment,
-                daytime_start=self.daytime_start,
-                daytime_end=self.daytime_end,
-            )
-            return False
 
         if d < self.date_start(moment) or d > self.date_end(moment):
             LOGGER.debug(
@@ -153,6 +145,22 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
                 moment=moment,
                 date_start=self.date_start(moment),
                 date_end=self.date_end(moment),
+            )
+            return False
+
+        if (
+            self.daytime_start < self.daytime_end
+            and (t < self.daytime_start or t >= self.daytime_end)
+        ) or (
+            self.daytime_start >= self.daytime_end
+            and (t < self.daytime_start and t >= self.daytime_end)
+        ):
+            LOGGER.debug(
+                "Interval.is_active_at -- out of time window",
+                interval=self,
+                moment=moment,
+                daytime_start=self.daytime_start,
+                daytime_end=self.daytime_end,
             )
             return False
 
