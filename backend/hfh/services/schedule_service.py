@@ -37,10 +37,6 @@ class ScheduleService:
         sample = asic.latest_sample
         temp = sample.env_temp if sample else None
 
-        if not self.can_change_hashing(asic, moment=moment):
-            LOGGER.debug("Ignoring unstable or transitioning asic", asic=asic.name)
-            return
-
         LOGGER.debug(
             "Updating asic operation by schedule constraints",
             asic=asic.name,
@@ -84,7 +80,7 @@ class ScheduleService:
 
         if self.should_be_hashing(asic, current_interval, moment):
             LOGGER.debug("should be hashing", asic=asic.name)
-            await self.ensure_is_hashing(asic)
+            await self.ensure_is_hashing(asic, moment=moment)
         else:
             LOGGER.debug("should not be hashing", asic=asic.name)
             await self.ensure_not_hashing(asic)
@@ -155,9 +151,14 @@ class ScheduleService:
         else:
             return asic.is_hashing
 
-    async def ensure_is_hashing(self, asic: Asic) -> None:
+    async def ensure_is_hashing(self, asic: Asic, moment: datetime) -> None:
         if not asic.is_hashing:
             LOGGER.info("Asic should be hashing but isn't", asic=asic.name)
+
+            if not self.can_change_hashing(asic, moment=moment):
+                LOGGER.info("Ignoring unstable or transitioning asic", asic=asic.name)
+                return
+
             await set_hashing(asic, True)
 
     async def ensure_power_limit(
