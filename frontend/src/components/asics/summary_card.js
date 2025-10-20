@@ -1,8 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import ReactJson from '@microlink/react-json-view'
-
 import API from '../../api';
 
 import { Link, Card } from '@mui/material';
@@ -38,7 +36,7 @@ export default function SummaryCard({name}) {
   return (
     <Box sx={{ flexGrow: 1 }} className={`summary-card summary-status-${asic_summary.status}`}>
       <Grid container spacing={1}>
-        <Grid xs={10} >
+        <Grid xs={8} >
           <Item align="left" className={`summary-status-${asic_summary.status}`}>{asic_summary.name}{isFetching && " (fetching)"}</Item>
         </Grid>
         <Grid xs={2} >
@@ -74,13 +72,6 @@ export default function SummaryCard({name}) {
         </Grid>
 
         <Grid xs={3} >
-          <Item align="right">Hashcost:</Item>
-        </Grid>
-        <Grid xs={9} >
-          <Item align="left">{asic_summary.hash_cost} $/TH</Item>
-        </Grid>
-
-        <Grid xs={3} >
           <Item align="right">Power:</Item>
         </Grid>
         <Grid xs={9} >
@@ -91,7 +82,7 @@ export default function SummaryCard({name}) {
           <Item align="right">Efficiency:</Item>
         </Grid>
         <Grid xs={9} >
-          <Item align="left">{asic_summary.power_per_th} W/TH</Item>
+          <Item align="left">{asic_summary.power_per_th} TH/W</Item>
         </Grid>
 
         <Grid xs={3} >
