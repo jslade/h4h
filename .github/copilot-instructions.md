@@ -134,7 +134,7 @@ npm start
 npm test
 
 # Build for production
-npm build
+npm run build
 ```
 
 ## Database
