@@ -5,8 +5,7 @@ from flask import make_response, request
 
 from ..app import APP
 from ..dependencies.auth import get_current_user
-from ..models.session import Session
-from ..models.user import User
+from ..services.auth_service import AuthService
 
 
 @APP.route("/api/login", methods=["POST"])
@@ -34,7 +33,7 @@ def login() -> tuple[dict[str, Any], int]:
         return {"error": "username and password are required"}, 400
 
     # Authenticate user
-    user = User.authenticate(username, password)
+    user = AuthService.authenticate_user(username, password)
     if not user:
         return {"error": "Invalid username or password"}, 401
 
@@ -43,7 +42,7 @@ def login() -> tuple[dict[str, Any], int]:
     ip_address = request.remote_addr
 
     # Create session
-    session = Session.create_session(user, user_agent, ip_address)
+    session = AuthService.create_session(user, user_agent, ip_address)
 
     # Prepare response
     response_data = {
@@ -58,7 +57,7 @@ def login() -> tuple[dict[str, Any], int]:
     is_production = os.getenv("FLASK_ENV") == "production"
     response.set_cookie(
         "h4h_session",
-        session.id,
+        str(session.id),
         max_age=315360000,
         httponly=True,
         secure=is_production,
@@ -82,16 +81,20 @@ def logout() -> tuple[dict[str, Any], int]:
         return {"error": "Not authenticated"}, 401
 
     # Get session ID
-    session_id = request.cookies.get("h4h_session")
-    if not session_id:
+    session_id_str = request.cookies.get("h4h_session")
+    if not session_id_str:
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
-            session_id = auth_header[7:]
+            session_id_str = auth_header[7:]
 
-    if session_id:
-        session = Session.get_by_id(session_id)
-        if session:
-            session.delete()
+    if session_id_str:
+        try:
+            session_id = int(session_id_str)
+            session = AuthService.get_session_by_id(session_id)
+            if session:
+                AuthService.delete_session(session)
+        except ValueError:
+            pass  # Invalid session ID format
 
     # Prepare response
     response = make_response({"message": "Logged out successfully"}, 200)

@@ -79,17 +79,32 @@ curl http://localhost:5000/api/some-endpoint \
   -H 'Authorization: Bearer <session-id>'
 ```
 
+## Code Architecture
+
+Authentication logic is organized in a service layer pattern:
+
+- **Models** (`hfh/models/user.py`, `hfh/models/session.py`): Schema definitions only
+- **AuthService** (`hfh/services/auth_service.py`): All authentication business logic
+  - Password hashing and verification
+  - User authentication
+  - Session CRUD operations
+  - Current user retrieval from request context
+- **Controllers** (`hfh/controllers/auth.py`): HTTP endpoints that use AuthService
+- **Dependencies** (`hfh/dependencies/auth.py`): Helper to get current user
+
 ## Creating Users
 
-Users must be created directly in the database. Use the Python shell or a migration:
+Users must be created directly in the database using the AuthService:
 
 ```python
 from hfh.models.user import User
+from hfh.services.auth_service import AuthService
 from hfh.db import DB
+from hfh.app import APP
 
 with APP.app_context():
     user = User(name="admin")
-    user.set_password("secure_password_here")
+    AuthService.set_user_password(user, "secure_password_here")
     DB.session.add(user)
     DB.session.commit()
 ```
@@ -102,7 +117,7 @@ with APP.app_context():
 - `password_hash`: String(255), bcrypt hash
 
 ### Sessions Table
-- `id`: String(36), UUID primary key
+- `id`: Integer, primary key (auto-increment)
 - `user_id`: Integer, foreign key to users
 - `user_agent`: String(255), optional
 - `ip_address`: String(45), optional

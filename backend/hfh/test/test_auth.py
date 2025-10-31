@@ -40,9 +40,10 @@ def test_user(app):
     """Create a test user."""
     from hfh.db import DB
     from hfh.models.user import User
+    from hfh.services.auth_service import AuthService
 
     user = User(name="testuser")
-    user.set_password("testpassword")
+    AuthService.set_user_password(user, "testpassword")
     DB.session.add(user)
     DB.session.commit()
     return user
@@ -194,39 +195,40 @@ class TestLogout:
         assert logout_response.status_code == 200
 
 
-class TestUserModel:
-    def test_user_password_hashing(self, app):
+class TestAuthService:
+    def test_password_hashing(self, app):
         """Test password hashing"""
         from hfh.models.user import User
+        from hfh.services.auth_service import AuthService
 
         user = User(name="testuser2")
-        user.set_password("mypassword")
+        AuthService.set_user_password(user, "mypassword")
 
         assert user.password_hash != "mypassword"
-        assert user.verify_password("mypassword") is True
-        assert user.verify_password("wrongpassword") is False
+        assert AuthService.verify_password("mypassword", user.password_hash) is True
+        assert AuthService.verify_password("wrongpassword", user.password_hash) is False
 
     def test_user_authenticate(self, app, test_user):
         """Test user authentication"""
-        from hfh.models.user import User
+        from hfh.services.auth_service import AuthService
 
-        user = User.authenticate("testuser", "testpassword")
+        user = AuthService.authenticate_user("testuser", "testpassword")
         assert user is not None
         assert user.name == "testuser"
 
-        user = User.authenticate("testuser", "wrongpassword")
+        user = AuthService.authenticate_user("testuser", "wrongpassword")
         assert user is None
 
-        user = User.authenticate("nonexistent", "password")
+        user = AuthService.authenticate_user("nonexistent", "password")
         assert user is None
 
 
-class TestSessionModel:
+class TestSessionService:
     def test_create_session(self, app, test_user):
         """Test session creation"""
-        from hfh.models.session import Session
+        from hfh.services.auth_service import AuthService
 
-        session = Session.create_session(
+        session = AuthService.create_session(
             test_user, user_agent="TestAgent", ip_address="127.0.0.1"
         )
 
@@ -239,10 +241,10 @@ class TestSessionModel:
 
     def test_get_session_by_id(self, app, test_user):
         """Test getting session by ID"""
-        from hfh.models.session import Session
+        from hfh.services.auth_service import AuthService
 
-        session = Session.create_session(test_user)
-        retrieved = Session.get_by_id(session.id)
+        session = AuthService.create_session(test_user)
+        retrieved = AuthService.get_session_by_id(session.id)
 
         assert retrieved is not None
         assert retrieved.id == session.id
@@ -252,25 +254,25 @@ class TestSessionModel:
         """Test updating last_used_at timestamp"""
         import time
 
-        from hfh.models.session import Session
+        from hfh.services.auth_service import AuthService
 
-        session = Session.create_session(test_user)
+        session = AuthService.create_session(test_user)
         original_time = session.last_used_at
 
         # Wait a bit and update
         time.sleep(0.1)
-        session.update_last_used()
+        AuthService.update_session_last_used(session)
 
         assert session.last_used_at > original_time
 
     def test_delete_session(self, app, test_user):
         """Test deleting a session"""
-        from hfh.models.session import Session
+        from hfh.services.auth_service import AuthService
 
-        session = Session.create_session(test_user)
+        session = AuthService.create_session(test_user)
         session_id = session.id
 
-        session.delete()
+        AuthService.delete_session(session)
 
-        retrieved = Session.get_by_id(session_id)
+        retrieved = AuthService.get_session_by_id(session_id)
         assert retrieved is None
