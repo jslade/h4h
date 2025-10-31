@@ -8,7 +8,7 @@ import API from '../../api';
 const api = new API();
 
 export default function Summary() {
-    const {isLoading, error, data: active_data} = useQuery({
+    const {isLoading, data: active_data} = useQuery({
         queryKey: ['asic/active'],
         queryFn: () => api.GET({ path:`/asic/active`}).then((data) => data),
         refetchInterval: 60_000

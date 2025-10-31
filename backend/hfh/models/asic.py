@@ -90,7 +90,7 @@ class Asic(DB.Model, PKId, UniquelyNamed):
             setattr(self, "_miner", None)
 
         self._miner = await pyasic.get_miner(self.address)
-        if self.password:
+        if self._miner and self.password:
             self._miner.pwd = self.password
         return self._miner
 
