@@ -179,8 +179,8 @@ class TestLogout:
             data=json.dumps({"username": "testuser", "password": "testpassword"}),
             content_type="application/json",
         )
-        session_id = json.loads(login_response.data)
         # Extract session_id from cookie
+        session_id = None
         for header_name, header_value in login_response.headers:
             if header_name.lower() == "set-cookie" and "h4h_session=" in header_value:
                 session_id = header_value.split("h4h_session=")[1].split(";")[0]

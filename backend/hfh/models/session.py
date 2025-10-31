@@ -45,7 +45,6 @@ class Session(DB.Model):
         """Create a new session for a user"""
         db_session = db_session or DB.session
         session = cls(
-            id=str(uuid.uuid4()),
             user_id=user.id,
             user_agent=user_agent,
             ip_address=ip_address,
