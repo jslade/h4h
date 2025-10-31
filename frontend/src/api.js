@@ -53,7 +53,11 @@ export default class API {
   }
 
   options ({ method, body }) {
-    const options = { method, headers: {} }
+    const options = { 
+      method, 
+      headers: {},
+      credentials: 'include' // Include cookies in requests
+    }
 
     if (body) {
       if (body instanceof window.FormData) {
