@@ -59,6 +59,24 @@ class AuthService:
         return session
 
     @staticmethod
+    def login(
+        username: str,
+        password: str,
+        user_agent: Optional[str] = None,
+        ip_address: Optional[str] = None,
+        db_session: Optional[DbSession] = None,
+    ) -> Optional[Session]:
+        """
+        Authenticate user and create a session.
+
+        Returns the session if authentication successful, None otherwise.
+        """
+        user = AuthService.authenticate_user(username, password, db_session)
+        if not user:
+            return None
+        return AuthService.create_session(user, user_agent, ip_address, db_session)
+
+    @staticmethod
     def get_session_by_id(
         session_id: int, db_session: Optional[DbSession] = None
     ) -> Optional[Session]:

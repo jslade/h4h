@@ -4,7 +4,6 @@ from typing import Any
 from flask import make_response, request
 
 from ..app import APP
-from ..dependencies.auth import get_current_user
 from ..services.auth_service import AuthService
 
 
@@ -32,22 +31,18 @@ def login() -> tuple[dict[str, Any], int]:
     if not username or not password:
         return {"error": "username and password are required"}, 400
 
-    # Authenticate user
-    user = AuthService.authenticate_user(username, password)
-    if not user:
-        return {"error": "Invalid username or password"}, 401
-
-    # Get request metadata
+    # Authenticate user and create session
     user_agent = request.headers.get("User-Agent")
     ip_address = request.remote_addr
+    session = AuthService.login(username, password, user_agent, ip_address)
 
-    # Create session
-    session = AuthService.create_session(user, user_agent, ip_address)
+    if not session:
+        return {"error": "Invalid username or password"}, 401
 
     # Prepare response
     response_data = {
-        "id": user.id,
-        "username": user.name,
+        "id": session.user.id,
+        "username": session.user.name,
     }
 
     response = make_response(response_data, 200)
@@ -76,7 +71,7 @@ def logout() -> tuple[dict[str, Any], int]:
     - 200: Successfully logged out
     - 401: Not authenticated
     """
-    user = get_current_user()
+    user = AuthService.get_current_user()
     if not user:
         return {"error": "Not authenticated"}, 401
 
