@@ -131,3 +131,51 @@ with APP.app_context():
 - Session cookies use the Secure flag in production
 - Sessions have a long expiration (~10 years) but can be manually invalidated
 - Session last_used_at is updated on each request for tracking
+
+## Frontend Integration
+
+### Login Page
+The frontend includes a Material-UI login page at `/login` that:
+- Collects username and password
+- POSTs to `/api/login` with credentials
+- Saves user info to localStorage on success
+- Redirects to home page after successful login
+
+### useAuth Hook
+Custom React hook (`src/hooks/useAuth.js`) that:
+- Manages authentication state in localStorage
+- Provides `login()` and `logout()` functions
+- Exposes `isAuthenticated` boolean
+- Persists user data across page refreshes
+
+### Route Protection
+All routes except `/login` are wrapped with the `RequireAuth` component:
+- Checks authentication status before rendering
+- Redirects to `/login` if not authenticated
+- Preserves location for redirect back after login
+
+### Logout
+Logout button in the header:
+- Calls `/api/logout` to delete server-side session
+- Clears localStorage
+- Redirects to `/login`
+
+## Creating Users
+
+Use the provided script to create users:
+
+```bash
+cd backend
+python scripts/create_user.py <username> <password>
+```
+
+Example:
+```bash
+python scripts/create_user.py admin mypassword123
+```
+
+The script will:
+- Validate password length (minimum 8 characters)
+- Check if username already exists
+- Hash the password using bcrypt
+- Create the user in the database
