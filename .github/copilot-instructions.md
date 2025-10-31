@@ -144,10 +144,12 @@ npm run build
 - **Connection**: Managed via SQLAlchemy
 - **Migrations**: Alembic via Flask-Migrate
 
-Default credentials (development only):
+Default credentials (development only - DO NOT use in production):
 - Username: postgres
 - Password: password
 - Database: hfh_dev
+
+⚠️ **Security Note**: These credentials are for local development only. Never use default credentials in production environments.
 
 ## Testing
 
