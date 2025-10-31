@@ -1,4 +1,4 @@
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time
 from decimal import Decimal
 from functools import cached_property
 from typing import TYPE_CHECKING, Optional
@@ -90,7 +90,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
     def date_end(self, moment: datetime) -> date:
         tz = moment.tzinfo or (self.schedule.timezone if self.schedule else None)
         year = moment.year
-        dt = datetime.strptime(f"{year}/{self.date_end_mmdd}", f"%Y/%m/%d")
+        dt = datetime.strptime(f"{year}/{self.date_end_mmdd}", "%Y/%m/%d")
         if tz:
             dt = dt.replace(tzinfo=tz)
 

@@ -1,10 +1,10 @@
 import os
-import flask_sqlalchemy.session
-
-from flask_sqlalchemy import SQLAlchemy
-from flask_alembic import Alembic
-from sqlalchemy.orm import scoped_session
 from typing import TypeAlias
+
+import flask_sqlalchemy.session
+from flask_alembic import Alembic
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import scoped_session
 
 from .app import APP
 
