@@ -5,3 +5,5 @@ from .hashing_schedule import HashingSchedule
 from .performance_limit import PerformanceLimit
 from .performance_sample import PerformanceSample
 from .scenario import Scenario
+from .session import Session
+from .user import User
