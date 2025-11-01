@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import Optional, Self
 
 from pydantic import AwareDatetime, BaseModel

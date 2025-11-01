@@ -1,3 +1,4 @@
+click
 flask==3.0.2
 Flask-APScheduler
 flask-migrate

@@ -1,4 +1,5 @@
 from typing import Optional, Self
+
 from sqlalchemy import select
 
 from ...db import DB, DbSession

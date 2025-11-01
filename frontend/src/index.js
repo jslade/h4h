@@ -19,15 +19,21 @@ import reportWebVitals from './reportWebVitals';
 
 import Root from './components/root';
 import Raw from './components/asics/raw';
+import Login from './pages/Login';
+import RequireAuth from './components/RequireAuth';
 
 const router = createBrowserRouter([
   {
+    path: "/login",
+    element: <Login />,
+  },
+  {
     path: "/",
-    element: <Root />,
+    element: <RequireAuth><Root /></RequireAuth>,
   },
   {
     path: "/asics/raw/:name",
-    element: <Raw />
+    element: <RequireAuth><Raw /></RequireAuth>
   },
 ]);
 
