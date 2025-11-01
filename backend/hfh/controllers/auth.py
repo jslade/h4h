@@ -75,21 +75,8 @@ def logout() -> tuple[dict[str, Any], int]:
     if not user:
         return {"error": "Not authenticated"}, 401
 
-    # Get session ID
-    session_id_str = request.cookies.get("h4h_session")
-    if not session_id_str:
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            session_id_str = auth_header[7:]
-
-    if session_id_str:
-        try:
-            session_id = int(session_id_str)
-            session = AuthService.get_session_by_id(session_id)
-            if session:
-                AuthService.delete_session(session)
-        except ValueError:
-            pass  # Invalid session ID format
+    # Logout (delete session)
+    AuthService.logout()
 
     # Prepare response
     response = make_response({"message": "Logged out successfully"}, 200)

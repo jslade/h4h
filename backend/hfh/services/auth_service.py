@@ -139,3 +139,32 @@ class AuthService:
         AuthService.update_session_last_used(session)
 
         return session.user
+
+    @staticmethod
+    def logout() -> bool:
+        """
+        Logout the current user by deleting their session.
+
+        Returns True if logout was successful, False if no session was found.
+        """
+        # Get session ID from cookie or Authorization header
+        session_id_str = request.cookies.get("h4h_session")
+        if not session_id_str:
+            auth_header = request.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                session_id_str = auth_header[7:]
+
+        if not session_id_str:
+            return False
+
+        # Convert to integer and delete session
+        try:
+            session_id = int(session_id_str)
+            session = AuthService.get_session_by_id(session_id)
+            if session:
+                AuthService.delete_session(session)
+                return True
+        except ValueError:
+            pass
+
+        return False
