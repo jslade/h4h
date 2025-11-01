@@ -1,7 +1,7 @@
 import asyncio
 
 from ..app import APP
-from ..dtos.asics import AsicsListDto, AsicsSummaryDto, AsicStatus, AsicSummaryDto
+from ..dtos.asics import AsicsListDto, AsicSummaryDto
 from ..models.asic import Asic
 from ..services.asic_service import (
     get_asic_data,

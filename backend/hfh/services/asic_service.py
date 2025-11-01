@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, time, timedelta
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 from typing import Optional
 
