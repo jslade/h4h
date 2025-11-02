@@ -37,7 +37,7 @@ class SamplingService:
         data = await get_asic_data(asic)
 
         moment = asic.local_time()
-        temp = data.env_temp
+        temp = data.env_temp or 0
 
         current_schedule_interval = self.schedule_service.get_current_interval(
             asic,
