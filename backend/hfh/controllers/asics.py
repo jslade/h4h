@@ -54,6 +54,14 @@ def get_asic_summary(name: str) -> dict:
         return AsicSummaryDto.from_asic(asic).model_dump()
 
 
+@APP.route("/api/asic/<name>/set-override", methods=["POST"])
+def set_override(name: str) -> dict:
+    asic = Asic.with_name(name)
+    data = asyncio.run(get_asic_data(asic))
+    raw = deep_dict(data.asdict())
+    return raw
+
+
 @APP.route("/api/asic/<name>/set-hashing/<state>", methods=["PUT", "PATCH"])
 def set_asic_hashing(name: str, state: str) -> dict:
     asic = Asic.with_name(name)

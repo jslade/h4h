@@ -40,8 +40,8 @@ logger = structlog.get_logger()
 @click.argument("password")
 @click.option(
     "--min-password-length",
-    default=8,
-    help="Minimum password length (default: 8)",
+    default=4,
+    help="Minimum password length (default: 4)",
     type=int,
 )
 def create_user(username: str, password: str, min_password_length: int):

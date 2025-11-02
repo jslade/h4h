@@ -1,26 +1,21 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 
-import './index.css';
-import reportWebVitals from './reportWebVitals';
+import "./index.css";
+import reportWebVitals from "./reportWebVitals";
 
-import Root from './components/root';
-import Raw from './components/asics/raw';
-import Login from './pages/Login';
-import RequireAuth from './components/RequireAuth';
+import Login from "./pages/Login";
+import Override from "./components/asics/Override";
+import Raw from "./components/asics/raw";
+import RequireAuth from "./components/RequireAuth";
+import Root from "./components/root";
 
 const router = createBrowserRouter([
   {
@@ -29,18 +24,33 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <RequireAuth><Root /></RequireAuth>,
+    element: (
+      <RequireAuth>
+        <Root />
+      </RequireAuth>
+    ),
   },
   {
     path: "/asics/raw/:name",
-    element: <RequireAuth><Raw /></RequireAuth>
+    element: (
+      <RequireAuth>
+        <Raw />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/asics/override/:name",
+    element: (
+      <RequireAuth>
+        <Override />
+      </RequireAuth>
+    ),
   },
 ]);
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

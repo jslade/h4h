@@ -42,6 +42,9 @@ export default function SummaryCard({name}) {
         <Grid xs={2} >
           <Item align="right"><Link href={`/asics/raw/${asic_summary.name}`} target="_blank">see raw</Link></Item>
         </Grid>
+        <Grid xs={2} >
+          <Item align="right"><Link href={`/asics/override/${asic_summary.name}`} target="_blank">override</Link></Item>
+        </Grid>
 
         <Grid xs={3} >
           <Item align="right">Status:</Item>
