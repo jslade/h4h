@@ -1,6 +1,9 @@
+from sched import scheduler
 from typing import Optional, Self
 
 from pydantic import AwareDatetime, BaseModel
+
+from ..services.sampling_service import SamplingService
 
 from ..models.asic import Asic, AsicStatus
 from ..services.schedule_service import ScheduleService
@@ -13,6 +16,7 @@ class AsicSummaryDto(BaseModel):
     changed_at: AwareDatetime
     sampled_at: Optional[AwareDatetime]
     interval_name: Optional[str]
+    interval_changed_at: Optional[AwareDatetime]
     interval_until: Optional[AwareDatetime]
     hash_rate: Optional[int]
     power: Optional[int]
@@ -29,11 +33,16 @@ class AsicSummaryDto(BaseModel):
         changed_at = asic.local_time((asic.changed_at or asic.updated_at))
         sampled_at = asic.local_time(sample.timestamp) if sample else None
 
-        scheduler = ScheduleService()
         moment = asic.local_time()
-        interval = scheduler.get_current_interval(
-            asic, moment=moment, temp=sample.env_temp if sample else None
-        )
+        interval = sample.hashing_interval
+        if interval is None:
+            scheduler = ScheduleService()
+            interval = scheduler.get_current_interval(
+                asic, moment=moment, temp=sample.env_temp if sample else None
+            )
+
+        sampler = SamplingService()
+        interval_changed_at = sampler.get_time_for_interval(asic, interval)
 
         return AsicSummaryDto(
             name=asic.name,
@@ -42,6 +51,7 @@ class AsicSummaryDto(BaseModel):
             changed_at=changed_at,
             sampled_at=sampled_at,
             interval_name=(interval.name or "null") if interval else None,
+            interval_changed_at=interval_changed_at,
             interval_until=interval.next_end_time(moment) if interval else None,
             hash_rate=sample.hash_rate if sample else None,
             power=sample.power if sample else None,

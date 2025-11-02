@@ -12,12 +12,23 @@ LOGGER = structlog.get_logger(__name__)
 
 if TYPE_CHECKING:
     from .asic import Asic
+    from .hashing_interval import HashingInterval
 
 
 class PerformanceSample(DB.Model, PKId):
     """Records the performance characteristics of an asic at a specific time"""
 
     __tablename__ = "performance_samples"
+
+    hashing_interval_id: Mapped[int | None] = mapped_column(
+        DB.Integer,
+        DB.ForeignKey("hashing_intervals.id"),
+        nullable=True,
+        index=True,
+    )
+    hashing_interval: Mapped[Optional["HashingInterval"]] = relationship(
+        "HashingInterval"
+    )
 
     timestamp: Mapped[datetime] = mapped_column(DB.DateTime, nullable=False, index=True)
     interval_secs: Mapped[int] = mapped_column(DB.Integer, nullable=False)
@@ -63,9 +74,13 @@ class PerformanceSample(DB.Model, PKId):
     asic: Mapped["Asic"] = relationship("Asic", back_populates="samples")
 
     @classmethod
-    def latest_for(cls, asic: "Asic") -> Optional[Self]:
-        return (
-            cls.query.filter(cls.asic_id == asic.id)
-            .order_by(cls.timestamp.desc())
-            .first()
-        )
+    def latest_for(
+        cls,
+        asic: "Asic",
+        *,
+        before_interval: Optional["HashingInterval"] = None,
+    ) -> Optional[Self]:
+        query = cls.query.filter(cls.asic_id == asic.id)
+        if before_interval:
+            query = query.filter(cls.hashing_interval_id != before_interval.id)
+        return query.order_by(cls.timestamp.desc()).first()

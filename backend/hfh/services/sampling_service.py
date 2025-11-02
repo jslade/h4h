@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional
 
@@ -5,6 +6,7 @@ import structlog
 
 from ..db import DB
 from ..models.asic import Asic
+from ..models.hashing_interval import HashingInterval
 from ..models.performance_sample import PerformanceSample
 from .asic_service import get_asic_data, update_status
 from .schedule_service import ScheduleService
@@ -48,6 +50,7 @@ class SamplingService:
 
         sample = PerformanceSample(
             asic=asic,
+            hashing_interval=current_schedule_interval,
             timestamp=moment,
             interval_secs=interval,
             is_online=asic.is_online,
@@ -63,3 +66,18 @@ class SamplingService:
         )
 
         DB.session.add(sample)
+
+    def get_time_for_interval(
+        self, asic: Asic, interval: Optional[HashingInterval]
+    ) -> Optional[datetime]:
+        """Get the time since the current interval started"""
+        if not interval:
+            return None
+
+        previous_interval = asic.latest_sample_before_interval(interval)
+        if not previous_interval:
+            return None
+
+        return previous_interval.timestamp + timedelta(
+            seconds=previous_interval.interval_secs
+        )

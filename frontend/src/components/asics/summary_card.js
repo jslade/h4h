@@ -75,9 +75,8 @@ export default function SummaryCard({ name }) {
         </Grid>
         <Grid xs={9}>
           <Item align="left">
-            <span title={"Since " + to_locale_string(asic_summary.changed_at)}>
-              {asic_summary.status}
-            </span>
+            {asic_summary.status}, since&nbsp;
+            {to_locale_string(asic_summary.changed_at)}
           </Item>
         </Grid>
 
@@ -91,6 +90,17 @@ export default function SummaryCard({ name }) {
                 " until " +
                 to_locale_string(asic_summary.interval_until)
               : "(none)"}
+          </Item>
+        </Grid>
+
+        <Grid xs={3}>
+          <Item align="right">Changed:</Item>
+        </Grid>
+        <Grid xs={9}>
+          <Item align="left">
+            {asic_summary.interval_changed_at
+              ? to_locale_string(asic_summary.interval_changed_at)
+              : "--"}
           </Item>
         </Grid>
 

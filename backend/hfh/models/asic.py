@@ -100,6 +100,16 @@ class Asic(DB.Model, PKId, UniquelyNamed):
 
         return PerformanceSample.latest_for(self)
 
+    def latest_sample_before_interval(
+        self, interval: "HashingInterval"
+    ) -> Optional["PerformanceSample"]:
+        from .performance_sample import PerformanceSample
+
+        return PerformanceSample.latest_for(
+            self,
+            before_interval=interval,
+        )
+
     @classmethod
     def all_active(cls, db_session: Optional[DbSession] = None) -> list[Self]:
         db_session = db_session or DB.session
