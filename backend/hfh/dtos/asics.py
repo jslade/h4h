@@ -58,3 +58,8 @@ class AsicsSummaryDto(BaseModel):
 
 class AsicsListDto(BaseModel):
     asics: list[str]
+
+
+class OverrideDto(BaseModel):
+    hashing: bool
+    hours: int

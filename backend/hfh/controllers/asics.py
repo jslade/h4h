@@ -1,17 +1,25 @@
 import asyncio
+from flask import request
+import structlog
 
 from ..app import APP
-from ..dtos.asics import AsicsListDto, AsicSummaryDto
+from ..dtos.asics import AsicsListDto, AsicSummaryDto, OverrideDto
 from ..models.asic import Asic
 from ..services.asic_service import (
     get_asic_data,
     get_asic_data_extended,
     get_asic_errors,
     set_hashing,
+    set_override,
     set_power_limit,
 )
+from ..services.auth_service import AuthService
+
 from ..utils.data import deep_dict
 from ..utils.validate_pydantic_response import validate_pydantic_response
+
+
+LOGGER = structlog.get_logger(__name__)
 
 
 @APP.route("/api/asic/<name>/raw", methods=["GET"])
@@ -55,11 +63,39 @@ def get_asic_summary(name: str) -> dict:
 
 
 @APP.route("/api/asic/<name>/set-override", methods=["POST"])
-def set_override(name: str) -> dict:
+def post_override(name: str) -> dict:
+    user = AuthService.get_current_user()
+    if not user:
+        return {"error": "Not authenticated"}, 401
+
+    data = request.get_json()
+    if not data:
+        return {"error": "Request body must be JSON"}, 400
+
+    LOGGER.info(
+        "override requested",
+        user=user.name,
+        asic=name,
+        override=data,
+    )
+
+    override = OverrideDto.model_validate(**data)
     asic = Asic.with_name(name)
-    data = asyncio.run(get_asic_data(asic))
-    raw = deep_dict(data.asdict())
-    return raw
+
+    asyncio.run(
+        set_override(
+            asic,
+            hashing=override.hashing,
+            hours=override.hours,
+        )
+    )
+
+    LOGGER.info(
+        "override set",
+        user=user.name,
+        asic=name,
+        override=asic.override_interval,
+    )
 
 
 @APP.route("/api/asic/<name>/set-hashing/<state>", methods=["PUT", "PATCH"])
