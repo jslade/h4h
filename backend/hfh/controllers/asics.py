@@ -79,7 +79,7 @@ def post_override(name: str) -> dict:
         override=data,
     )
 
-    override = OverrideDto.model_validate(**data)
+    override = OverrideDto.model_validate(data)
     asic = Asic.with_name(name)
 
     asyncio.run(
@@ -96,6 +96,8 @@ def post_override(name: str) -> dict:
         asic=name,
         override=asic.override_interval,
     )
+
+    return {}
 
 
 @APP.route("/api/asic/<name>/set-hashing/<state>", methods=["PUT", "PATCH"])
