@@ -28,7 +28,7 @@ export default function Override() {
   const onSubmit = (e) => {
     e.preventDefault();
     const formData = {
-      enabled: e.target.hashing.checked,
+      hashing: e.target.hashing.checked,
       hours: parseInt(e.target.hours.value, 10),
     };
 
