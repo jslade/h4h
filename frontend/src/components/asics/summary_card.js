@@ -81,19 +81,6 @@ export default function SummaryCard({ name }) {
         </Grid>
 
         <Grid xs={3}>
-          <Item align="right">Interval:</Item>
-        </Grid>
-        <Grid xs={9}>
-          <Item align="left">
-            {asic_summary.interval_name
-              ? asic_summary.interval_name +
-                " until " +
-                to_locale_string(asic_summary.interval_until)
-              : "(none)"}
-          </Item>
-        </Grid>
-
-        <Grid xs={3}>
           <Item align="right">Changed:</Item>
         </Grid>
         <Grid xs={9}>
@@ -105,15 +92,15 @@ export default function SummaryCard({ name }) {
         </Grid>
 
         <Grid xs={3}>
-          <Item align="right">Updated&nbsp;at:</Item>
+          <Item align="right">Interval:</Item>
         </Grid>
         <Grid xs={9}>
           <Item align="left">
-            <span
-              title={"Sampled at " + to_locale_string(asic_summary.sampled_at)}
-            >
-              {to_locale_string(asic_summary.updated_at)}
-            </span>
+            {asic_summary.interval_name
+              ? asic_summary.interval_name +
+                " until " +
+                to_locale_string(asic_summary.interval_until)
+              : "(none)"}
           </Item>
         </Grid>
 
@@ -155,6 +142,19 @@ export default function SummaryCard({ name }) {
         <Grid xs={9}>
           <Item align="left">
             <DualTempField deg_c={asic_summary.env_temp} />
+          </Item>
+        </Grid>
+
+        <Grid xs={3}>
+          <Item align="right">Updated&nbsp;at:</Item>
+        </Grid>
+        <Grid xs={9}>
+          <Item align="left">
+            <span
+              title={"Sampled at " + to_locale_string(asic_summary.sampled_at)}
+            >
+              {to_locale_string(asic_summary.updated_at)}
+            </span>
           </Item>
         </Grid>
       </Grid>
