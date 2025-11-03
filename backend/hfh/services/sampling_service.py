@@ -78,6 +78,5 @@ class SamplingService:
         if not previous_interval:
             return None
 
-        return previous_interval.timestamp + timedelta(
-            seconds=previous_interval.interval_secs
-        )
+        when = previous_interval.timestamp
+        return when.astimezone(asic.timezone)
