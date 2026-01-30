@@ -110,6 +110,22 @@ class Asic(DB.Model, PKId, UniquelyNamed):
             before_interval=interval,
         )
 
+    def samples_in_range(
+        self, start: datetime, end: datetime | None = None
+    ) -> list["PerformanceSample"]:
+        from .performance_sample import PerformanceSample
+
+        return PerformanceSample.in_range(
+            self,
+            start_time=start,
+            end_time=end,
+        )
+
+    def samples_since(
+        self, start: datetime
+    ) -> list["PerformanceSample"]:
+        return self.samples_in_range(start, None)
+
     @classmethod
     def all_active(cls, db_session: Optional[DbSession] = None) -> list[Self]:
         db_session = db_session or DB.session

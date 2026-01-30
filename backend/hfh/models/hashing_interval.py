@@ -56,7 +56,7 @@ class HashingInterval(DB.Model, PKId, OptionallyNamed):
         DB.Integer, DB.ForeignKey("performance_limits.id"), nullable=True
     )
     performance_limit: Mapped[Optional["PerformanceLimit"]] = relationship(
-        "PerformanceLimit", back_populates="intervals"
+        "PerformanceLimit",
     )
 
     @cached_property

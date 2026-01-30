@@ -20,6 +20,14 @@ services:
       DATABASE_URL: postgres://postgres@db:5432/hfh_dev
     restart: always
 
+  backend-test:
+    extends: backend
+    depends_on:
+      - db-test
+    environment:
+      DATABASE_URL: postgres://postgres@db-test:5432/hfh_test
+    restart: never
+
   db:
     image: postgres:latest
     ports:
@@ -30,6 +38,15 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - local_pgdata:/var/lib/postgresql/data
+
+  db-test:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: hfh_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - test_pgdata:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4
@@ -44,4 +61,5 @@ services:
 
 volumes:
   local_pgdata:
+  test_pgdata: {}
   pgadmin-data:
