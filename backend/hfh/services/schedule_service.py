@@ -80,13 +80,22 @@ class ScheduleService:
 
         if self.should_be_hashing(asic, current_interval, moment):
             LOGGER.debug("should be hashing", asic=asic.name)
-            await self.ensure_is_hashing(asic, moment=moment)
+            await self.ensure_is_hashing(
+                asic,
+                moment=moment,
+                current_interval=current_interval,
+            )
         else:
             LOGGER.debug("should not be hashing", asic=asic.name)
             await self.ensure_not_hashing(asic)
         await self.ensure_power_limit(asic, current_interval)
 
-    def can_change_hashing(self, asic: Asic, moment: datetime) -> bool:
+    def can_change_hashing(
+        self,
+        asic: Asic,
+        moment: datetime,
+        current_interval: Optional[HashingInterval]
+    ) -> bool:
         """
         Determine if we can change the hashing state of the ASIC based on its current status.
         """
@@ -94,6 +103,20 @@ class ScheduleService:
         if status in (AsicStatus.error, AsicStatus.offline):
             return True
 
+        # Check for temperature override:
+        if current_interval and current_interval.temp_max is not None:
+            sample = asic.latest_sample
+            if sample and sample.env_temp is not None:
+                if sample.env_temp < current_interval.temp_max:
+                    LOGGER.debug(
+                        "Hashing state can change -- temp back under max",
+                        asic=asic.name,
+                        temp=sample.env_temp,
+                        temp_max=current_interval.temp_max,
+                    )
+                    return True
+
+        # Prevent thrashing by ensuring a minimum time since last change
         changed_at = asic.local_time(
             asic.changed_at if asic.changed_at else datetime(2020, 1, 1)
         )
@@ -151,11 +174,18 @@ class ScheduleService:
         else:
             return asic.is_hashing
 
-    async def ensure_is_hashing(self, asic: Asic, moment: datetime) -> None:
+    async def ensure_is_hashing(
+        self, asic: Asic, moment: datetime,
+        current_interval: Optional[HashingInterval],
+    ) -> None:
         if not asic.is_hashing:
             LOGGER.info("Asic should be hashing but isn't", asic=asic.name)
 
-            if not self.can_change_hashing(asic, moment=moment):
+            if not self.can_change_hashing(
+                asic,
+                moment=moment,
+                current_interval=current_interval,
+            ):
                 LOGGER.info("Ignoring unstable or transitioning asic", asic=asic.name)
                 return
 
