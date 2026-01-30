@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Literal, Optional, Self
@@ -207,8 +208,10 @@ class PerformanceSample(DB.Model, PKId):
 
         graph: list[str] = []
         for timestamp, value in rows:
-            if isinstance(value, int | float | Decimal) and value > 0:
-                n_stars = int(max_width * (1.0 * value / max_value)) if max_value else 0
+            if isinstance(value, bool):
+                stars = ""
+            elif isinstance(value, int | float | Decimal) and value > 0:
+                n_stars = int(math.ceil((Decimal(max_width) * (Decimal(value) / Decimal(max_value))))) if max_value else 0
                 stars = "*" * n_stars
             else:
                 stars = ""
