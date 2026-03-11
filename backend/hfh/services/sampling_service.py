@@ -37,12 +37,23 @@ class SamplingService:
         data = await get_asic_data(asic)
 
         moment = asic.local_time()
-        temp = data.env_temp or 0
+        env_temp = data.env_temp or 0
+
+        if env_temp == 0 and data.temperature_avg > 0:
+            env_temp = data.temperature_avg
+
+        if env_temp == 0:
+            # When the ASIC transitions, the temp may temporarily read as 0.
+            # In this case, use the previous sample's temp if available to
+            # avoid recording a false 0 temp.
+            previous_sample = asic.latest_sample
+            if previous_sample and previous_sample.env_temp > 0:
+                env_temp = int(previous_sample.env_temp)
 
         current_schedule_interval = self.schedule_service.get_current_interval(
             asic,
             moment=moment,
-            temp=temp,
+            temp=int(env_temp),
         )
         current_price_per_kwh = (
             current_schedule_interval.price_per_kwh if current_schedule_interval else None
@@ -56,8 +67,8 @@ class SamplingService:
             is_online=asic.is_online,
             is_hashing=asic.is_hashing,
             is_stable=asic.is_stable,
-            temp=int(data.temperature_avg or 0),
-            env_temp=int(data.env_temp or 0),
+            temp=int(data.temperature_avg or env_temp or 0),
+            env_temp=int(env_temp or 0),
             hash_rate=int(data.hashrate or 0),
             power=int(data.wattage or 0),
             power_limit=int(data.wattage_limit or 0),
