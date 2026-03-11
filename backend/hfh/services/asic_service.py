@@ -11,6 +11,7 @@ from ..db import DB
 from ..models.asic import Asic, AsicStatus
 from ..models.hashing_interval import HashingInterval
 from ..models.performance_limit import PerformanceLimit
+from ..models.performance_sample import PerformanceSample
 from ..utils.data import getitem
 
 LOGGER = structlog.get_logger(__name__)
@@ -227,3 +228,33 @@ async def update_status_of_all_active() -> None:
     for asic in all_active:
         await update_status(asic)
     DB.session.commit()
+
+
+def print_recent_samples(asic: Asic, since: datetime | None = None) -> None:
+    """
+    Helper function to get a visual representation of what's going on with the
+    asic, based on recent performance samples (by default, the last 24 hours).
+    
+    Output will look something like:
+    ['2026-02-04 20:56:28.782427:************************* 35', 'Morning Off-Peak', 1998, 76, 'on', 'stable']
+    ['2026-02-04 20:57:27.592487:************************* 35', 'Morning Off-Peak', 1998, 76, 'on', 'stable']
+    ['2026-02-04 20:58:32.908674:************************** 36', 'When Hot', 1998, 76, 'on', 'stable']
+    ['2026-02-04 20:59:40.697017:************************** 36', 'When Hot', 1921, 0, 'OFF', 'TRANSITIONING']
+    ['2026-02-04 21:00:29.049660:*************************** 37', 'When Hot', 1631, 0, 'OFF', 'TRANSITIONING']
+    ['2026-02-04 21:01:27.509333:************************** 36', 'When Hot', 1276, 0, 'OFF', 'TRANSITIONING']
+    ['2026-02-04 21:02:29.582708:************************* 35', 'Morning Off-Peak', 875, 0, 'OFF', 'TRANSITIONING']
+    ['2026-02-04 21:03:33.824972:*********************** 33', 'Morning Off-Peak', 457, 0, 'OFF', 'TRANSITIONING']
+    """
+    if since is None:
+        since = datetime.now() - timedelta(days=1)
+    samples = asic.samples_since(since)
+
+    graph = PerformanceSample.graph(samples, attr="env_temp")
+    zipped_samples = [t for t in zip(graph, samples, strict=True)]
+
+    print("\n".join([str([
+        gr,
+        s.hashing_interval.name,
+        s.power, s.hash_rate, "on" if s.is_hashing else "OFF",
+        "stable" if s.is_stable else "TRANSITIONING",
+    ]) for gr, s in zipped_samples]))
