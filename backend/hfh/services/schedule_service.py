@@ -104,24 +104,16 @@ class ScheduleService:
             return True
 
         # Check for temperature override:
-        if current_interval and current_interval.temp_max is not None:
-            sample = asic.latest_sample
-            if sample and sample.env_temp is not None:
-                if sample.env_temp < current_interval.temp_max:
-                    LOGGER.debug(
-                        "Hashing state can change -- temp back under max",
-                        asic=asic.name,
-                        temp=sample.env_temp,
-                        temp_max=current_interval.temp_max,
-                    )
-                    return True
+        if self.under_temp_max_and_falling(asic, current_interval):
+            LOGGER.info("ASIC under temp_max and falling", asic=asic.name)
+            return True
 
         # Prevent thrashing by ensuring a minimum time since last change
         changed_at = asic.local_time(
             asic.changed_at if asic.changed_at else datetime(2020, 1, 1)
         )
         since_changed = moment - changed_at
-        if since_changed < timedelta(minutes=30):
+        if since_changed < timedelta(minutes=asic.transition_minutes):
             LOGGER.debug(
                 "Too soon since last change to hashing state",
                 asic=asic.name,
@@ -130,6 +122,26 @@ class ScheduleService:
             return False
 
         return True
+    
+    def under_temp_max_and_falling(
+        self,
+        asic: Asic,
+        current_interval: Optional[HashingInterval]
+    ) -> bool:
+        if not current_interval or not current_interval.temp_max:
+            return False
+        
+        temp_max = current_interval.temp_max
+        latest_sample = asic.latest_sample
+        if not latest_sample or latest_sample.env_temp >= temp_max:
+            return False
+        
+        # Check if temp is falling by comparing to previous sample
+        previous_samples = asic.samples_in_range(latest_sample.timestamp - timedelta(minutes=10), latest_sample.timestamp - timedelta(seconds=1))
+        previous_sample = previous_samples[-1] if previous_samples else None
+
+        # Only use this override if there is a relatively high rate of change:
+        return previous_sample and previous_sample.env_temp - latest_sample.env_temp > 3
 
     def get_current_interval(
         self,
